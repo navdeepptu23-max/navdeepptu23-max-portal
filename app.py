@@ -82,6 +82,71 @@ class Post(db.Model):
         }
 
 
+class HospitalReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    hospital_name = db.Column(db.String(255), nullable=False)
+    district = db.Column(db.String(100), nullable=False)
+    month_year = db.Column(db.String(20), nullable=False)
+    
+    # Outpatients
+    outpatients_new_male = db.Column(db.Integer, default=0)
+    outpatients_new_female = db.Column(db.Integer, default=0)
+    outpatients_new_male_child = db.Column(db.Integer, default=0)
+    outpatients_new_female_child = db.Column(db.Integer, default=0)
+    
+    outpatients_old_male = db.Column(db.Integer, default=0)
+    outpatients_old_female = db.Column(db.Integer, default=0)
+    outpatients_old_male_child = db.Column(db.Integer, default=0)
+    outpatients_old_female_child = db.Column(db.Integer, default=0)
+    
+    outpatients_emergency_male = db.Column(db.Integer, default=0)
+    outpatients_emergency_female = db.Column(db.Integer, default=0)
+    outpatients_emergency_male_child = db.Column(db.Integer, default=0)
+    outpatients_emergency_female_child = db.Column(db.Integer, default=0)
+    
+    # Admissions
+    admissions_male = db.Column(db.Integer, default=0)
+    admissions_female = db.Column(db.Integer, default=0)
+    admissions_male_child = db.Column(db.Integer, default=0)
+    admissions_female_child = db.Column(db.Integer, default=0)
+    
+    admissions_emergency = db.Column(db.Integer, default=0)
+    medical_legal_cases = db.Column(db.Integer, default=0)
+    same_day_admission_discharge = db.Column(db.Integer, default=0)
+    
+    # Surgeries
+    tubectomies = db.Column(db.Integer, default=0)
+    vasectomies = db.Column(db.Integer, default=0)
+    minor_surgeries = db.Column(db.Integer, default=0)
+    major_surgeries = db.Column(db.Integer, default=0)
+    
+    # Deaths & Deliveries
+    deaths_total = db.Column(db.Integer, default=0)
+    normal_deliveries = db.Column(db.Integer, default=0)
+    caesarean_deliveries = db.Column(db.Integer, default=0)
+    male_children_births = db.Column(db.Integer, default=0)
+    female_children_births = db.Column(db.Integer, default=0)
+    
+    # Lab & Misc
+    lab_tests = db.Column(db.Integer, default=0)
+    cumulative_inpatient_days = db.Column(db.Integer, default=0)
+    user_charges_collection = db.Column(db.Float, default=0)
+    rsby_cases = db.Column(db.Integer, default=0)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'hospital_name': self.hospital_name,
+            'district': self.district,
+            'month_year': self.month_year,
+            'created_at': self.created_at.isoformat()
+        }
+
+
 # ==================== DECORATORS ====================
 
 def login_required(f):
@@ -337,6 +402,97 @@ def like_post(post_id):
     post.likes += 1
     db.session.commit()
     return jsonify({'likes': post.likes, 'success': True})
+
+
+# ==================== ROUTES: HOSPITAL REPORTS ====================
+
+@app.route('/hospital/report/new', methods=['GET', 'POST'])
+@login_required
+def new_hospital_report():
+    user = get_current_user()
+    
+    if request.method == 'POST':
+        hospital_name = request.form.get('hospital_name', '').strip()
+        district = request.form.get('district', '').strip()
+        month_year = request.form.get('month_year', '').strip()
+        
+        if not all([hospital_name, district, month_year]):
+            flash('Hospital name, district, and month/year are required', 'danger')
+            return redirect(url_for('new_hospital_report'))
+        
+        report = HospitalReport(
+            user_id=user.id,
+            hospital_name=hospital_name,
+            district=district,
+            month_year=month_year,
+            # Outpatients - New
+            outpatients_new_male=request.form.get('outpatients_new_male', 0, type=int),
+            outpatients_new_female=request.form.get('outpatients_new_female', 0, type=int),
+            outpatients_new_male_child=request.form.get('outpatients_new_male_child', 0, type=int),
+            outpatients_new_female_child=request.form.get('outpatients_new_female_child', 0, type=int),
+            # Outpatients - Old
+            outpatients_old_male=request.form.get('outpatients_old_male', 0, type=int),
+            outpatients_old_female=request.form.get('outpatients_old_female', 0, type=int),
+            outpatients_old_male_child=request.form.get('outpatients_old_male_child', 0, type=int),
+            outpatients_old_female_child=request.form.get('outpatients_old_female_child', 0, type=int),
+            # Outpatients - Emergency
+            outpatients_emergency_male=request.form.get('outpatients_emergency_male', 0, type=int),
+            outpatients_emergency_female=request.form.get('outpatients_emergency_female', 0, type=int),
+            outpatients_emergency_male_child=request.form.get('outpatients_emergency_male_child', 0, type=int),
+            outpatients_emergency_female_child=request.form.get('outpatients_emergency_female_child', 0, type=int),
+            # Admissions
+            admissions_male=request.form.get('admissions_male', 0, type=int),
+            admissions_female=request.form.get('admissions_female', 0, type=int),
+            admissions_male_child=request.form.get('admissions_male_child', 0, type=int),
+            admissions_female_child=request.form.get('admissions_female_child', 0, type=int),
+            admissions_emergency=request.form.get('admissions_emergency', 0, type=int),
+            medical_legal_cases=request.form.get('medical_legal_cases', 0, type=int),
+            same_day_admission_discharge=request.form.get('same_day_admission_discharge', 0, type=int),
+            # Surgeries
+            tubectomies=request.form.get('tubectomies', 0, type=int),
+            vasectomies=request.form.get('vasectomies', 0, type=int),
+            minor_surgeries=request.form.get('minor_surgeries', 0, type=int),
+            major_surgeries=request.form.get('major_surgeries', 0, type=int),
+            # Deaths & Deliveries
+            deaths_total=request.form.get('deaths_total', 0, type=int),
+            normal_deliveries=request.form.get('normal_deliveries', 0, type=int),
+            caesarean_deliveries=request.form.get('caesarean_deliveries', 0, type=int),
+            male_children_births=request.form.get('male_children_births', 0, type=int),
+            female_children_births=request.form.get('female_children_births', 0, type=int),
+            # Lab & Misc
+            lab_tests=request.form.get('lab_tests', 0, type=int),
+            cumulative_inpatient_days=request.form.get('cumulative_inpatient_days', 0, type=int),
+            user_charges_collection=request.form.get('user_charges_collection', 0, type=float),
+            rsby_cases=request.form.get('rsby_cases', 0, type=int)
+        )
+        db.session.add(report)
+        db.session.commit()
+        
+        flash('Hospital report submitted successfully', 'success')
+        return redirect(url_for('hospital_reports_list'))
+    
+    return render_template('hospital_report_form.html', user=user)
+
+
+@app.route('/hospital/reports')
+@login_required
+def hospital_reports_list():
+    user = get_current_user()
+    reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    return render_template('hospital_reports_list.html', user=user, reports=reports)
+
+
+@app.route('/hospital/report/<int:report_id>')
+@login_required
+def view_hospital_report(report_id):
+    report = HospitalReport.query.get_or_404(report_id)
+    user = get_current_user()
+    
+    if report.user_id != user.id:
+        flash('You do not have permission to view this report', 'danger')
+        return redirect(url_for('hospital_reports_list'))
+    
+    return render_template('hospital_report_view.html', report=report, user=user)
 
 
 # ==================== ROUTES: API ====================

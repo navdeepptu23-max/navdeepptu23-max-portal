@@ -29,6 +29,15 @@
     </div>
     
     <div class="card">
+        <h2>📊 Hospital Reports</h2>
+        <p style="color: #666; margin-bottom: 20px;">Create and manage hospital reports.</p>
+        <div class="links">
+            <a href="{{ url_for('new_hospital_report') }}">➕ New Hospital Report</a>
+            <a href="{{ url_for('hospital_reports_list') }}">📋 View All Reports</a>
+        </div>
+    </div>
+
+    <div class="card">
         <h2>⚙️ Account Management</h2>
         <div class="links">
             <a href="{{ url_for('profile') }}">✏️ Edit Profile</a>

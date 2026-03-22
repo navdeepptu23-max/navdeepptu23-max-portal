@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-11 mx-auto">
+            <!-- Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h3>{{ report.hospital_name }}</h3>
+                            <p class="text-muted mb-0">
+                                <strong>District:</strong> {{ report.district }}
+                            </p>
+                            <p class="text-muted">
+                                <strong>Period:</strong> {{ report.month_year }}
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted">
+                                <strong>Submitted:</strong> {{ report.created_at.strftime('%B %d, %Y at %H:%M') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outpatients -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">📋 Outpatients</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Category</th>
+                                <th>Male</th>
+                                <th>Female</th>
+                                <th>Male Child &lt;14</th>
+                                <th>Female Child &lt;14</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>New</strong></td>
+                                <td>{{ report.outpatients_new_male }}</td>
+                                <td>{{ report.outpatients_new_female }}</td>
+                                <td>{{ report.outpatients_new_male_child }}</td>
+                                <td>{{ report.outpatients_new_female_child }}</td>
+                                <td><strong>{{ report.outpatients_new_male + report.outpatients_new_female + report.outpatients_new_male_child + report.outpatients_new_female_child }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Old</strong></td>
+                                <td>{{ report.outpatients_old_male }}</td>
+                                <td>{{ report.outpatients_old_female }}</td>
+                                <td>{{ report.outpatients_old_male_child }}</td>
+                                <td>{{ report.outpatients_old_female_child }}</td>
+                                <td><strong>{{ report.outpatients_old_male + report.outpatients_old_female + report.outpatients_old_male_child + report.outpatients_old_female_child }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Emergency</strong></td>
+                                <td>{{ report.outpatients_emergency_male }}</td>
+                                <td>{{ report.outpatients_emergency_female }}</td>
+                                <td>{{ report.outpatients_emergency_male_child }}</td>
+                                <td>{{ report.outpatients_emergency_female_child }}</td>
+                                <td><strong>{{ report.outpatients_emergency_male + report.outpatients_emergency_female + report.outpatients_emergency_male_child + report.outpatients_emergency_female_child }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Admissions -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">🏥 Admissions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Male Admissions:</strong> {{ report.admissions_male }}</p>
+                            <p><strong>Female Admissions:</strong> {{ report.admissions_female }}</p>
+                            <p><strong>Male Child Admissions:</strong> {{ report.admissions_male_child }}</p>
+                            <p><strong>Female Child Admissions:</strong> {{ report.admissions_female_child }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Emergency Admissions:</strong> {{ report.admissions_emergency }}</p>
+                            <p><strong>Medical Legal Cases:</strong> {{ report.medical_legal_cases }}</p>
+                            <p><strong>Same Day Discharge:</strong> {{ report.same_day_admission_discharge }}</p>
+                            <p><strong>Total Admissions:</strong> <span class="badge bg-primary">{{ report.admissions_male + report.admissions_female + report.admissions_male_child + report.admissions_female_child }}</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Surgeries -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">🔪 Surgeries</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tubectomies:</strong> {{ report.tubectomies }}</p>
+                            <p><strong>Vasectomies:</strong> {{ report.vasectomies }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Minor Surgeries:</strong> {{ report.minor_surgeries }}</p>
+                            <p><strong>Major Surgeries:</strong> {{ report.major_surgeries }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <p><strong>Total Surgeries:</strong> <span class="badge bg-success">{{ report.tubectomies + report.vasectomies + report.minor_surgeries + report.major_surgeries }}</span></p>
+                </div>
+            </div>
+
+            <!-- Deaths & Deliveries -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">👶 Deaths & Deliveries</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Total Deaths:</strong> {{ report.deaths_total }}</p>
+                            <p><strong>Normal Deliveries:</strong> {{ report.normal_deliveries }}</p>
+                            <p><strong>Caesarean Deliveries:</strong> {{ report.caesarean_deliveries }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Male Children Births:</strong> {{ report.male_children_births }}</p>
+                            <p><strong>Female Children Births:</strong> {{ report.female_children_births }}</p>
+                            <p><strong>Total Deliveries:</strong> <span class="badge bg-info">{{ report.normal_deliveries + report.caesarean_deliveries }}</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lab Tests & Other -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">🔬 Lab Tests & Other</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Lab Tests:</strong> {{ report.lab_tests }}</p>
+                            <p><strong>Cumulative Inpatient Days:</strong> {{ report.cumulative_inpatient_days }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>User Charges Collection:</strong> <span class="badge bg-warning">₹{{ "{:,.2f}".format(report.user_charges_collection) }}</span></p>
+                            <p><strong>RSBY Cases:</strong> {{ report.rsby_cases }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-2 mb-5">
+                <a href="{{ url_for('hospital_reports_list') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Reports
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

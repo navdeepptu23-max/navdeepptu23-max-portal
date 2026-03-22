@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">📋 Hospital Report Form</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" class="needs-validation">
+                        <!-- Hospital Information -->
+                        <div class="section-title mb-4">
+                            <h4 class="text-primary">Hospital Information</h4>
+                            <hr>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="hospital_name" class="form-label">Hospital Name</label>
+                                <input type="text" class="form-control" id="hospital_name" name="hospital_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="district" class="form-label">District</label>
+                                <input type="text" class="form-control" id="district" name="district" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="month_year" class="form-label">Month & Year (e.g., SEP-2025)</label>
+                                <input type="text" class="form-control" id="month_year" name="month_year" placeholder="SEP-2025" required>
+                            </div>
+                        </div>
+
+                        <!-- Outpatients -->
+                        <div class="section-title mt-4 mb-3">
+                            <h5 class="text-primary">Outpatients</h5>
+                            <hr>
+                        </div>
+
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Male</th>
+                                    <th>Female</th>
+                                    <th>Male Child &lt;14 Yrs</th>
+                                    <th>Female Child &lt;14 Yrs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>New</strong></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_new_male" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_new_female" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_new_male_child" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_new_female_child" value="0"></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Old</strong></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_old_male" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_old_female" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_old_male_child" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_old_female_child" value="0"></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Emergency</strong></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_emergency_male" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_emergency_female" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_emergency_male_child" value="0"></td>
+                                    <td><input type="number" class="form-control form-control-sm" name="outpatients_emergency_female_child" value="0"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Admissions -->
+                        <div class="section-title mt-4 mb-3">
+                            <h5 class="text-primary">Admissions</h5>
+                            <hr>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Total Admissions - Male</label>
+                                <input type="number" class="form-control" name="admissions_male" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Total Admissions - Female</label>
+                                <input type="number" class="form-control" name="admissions_female" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Total Admissions - Male Child</label>
+                                <input type="number" class="form-control" name="admissions_male_child" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Total Admissions - Female Child</label>
+                                <input type="number" class="form-control" name="admissions_female_child" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Admissions through Emergency (out of total)</label>
+                                <input type="number" class="form-control" name="admissions_emergency" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Medical Legal Cases</label>
+                                <input type="number" class="form-control" name="medical_legal_cases" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Same Day Admission & Discharge</label>
+                                <input type="number" class="form-control" name="same_day_admission_discharge" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Surgeries -->
+                        <div class="section-title mt-4 mb-3">
+                            <h5 class="text-primary">Surgeries</h5>
+                            <hr>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tubectomies (including laparoscopic)</label>
+                                <input type="number" class="form-control" name="tubectomies" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Vasectomies</label>
+                                <input type="number" class="form-control" name="vasectomies" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Minor Surgeries (excluding vasectomies)</label>
+                                <input type="number" class="form-control" name="minor_surgeries" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Major Surgeries (excluding tubectomies)</label>
+                                <input type="number" class="form-control" name="major_surgeries" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Deaths & Deliveries -->
+                        <div class="section-title mt-4 mb-3">
+                            <h5 class="text-primary">Deaths & Deliveries</h5>
+                            <hr>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Total Deaths</label>
+                                <input type="number" class="form-control" name="deaths_total" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Normal Deliveries</label>
+                                <input type="number" class="form-control" name="normal_deliveries" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Caesarean Deliveries</label>
+                                <input type="number" class="form-control" name="caesarean_deliveries" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Male Children Births (excluding still birth)</label>
+                                <input type="number" class="form-control" name="male_children_births" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Female Children Births (excluding still birth)</label>
+                                <input type="number" class="form-control" name="female_children_births" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Lab & Miscellaneous -->
+                        <div class="section-title mt-4 mb-3">
+                            <h5 class="text-primary">Lab Tests & Other</h5>
+                            <hr>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Number of Lab Tests</label>
+                                <input type="number" class="form-control" name="lab_tests" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Total Cumulative Inpatient Days</label>
+                                <input type="number" class="form-control" name="cumulative_inpatient_days" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">User Charges Collection (in Rs.)</label>
+                                <input type="number" class="form-control" name="user_charges_collection" value="0" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Number of RSBY Cases</label>
+                                <input type="number" class="form-control" name="rsby_cases" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="mt-5 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Submit Report
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .section-title h4, .section-title h5 {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    table.table-bordered {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
