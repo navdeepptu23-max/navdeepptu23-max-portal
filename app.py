@@ -32,6 +32,7 @@ class User(db.Model):
     full_name = db.Column(db.String(120))
     bio = db.Column(db.Text, default='')
     avatar_url = db.Column(db.String(255), default='https://ui-avatars.com/api/?name=User')
+    is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -159,9 +160,31 @@ def login_required(f):
     return decorated_function
 
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:
+            flash('Admin login required', 'danger')
+            return redirect(url_for('admin_login'))
+        admin = User.query.get(session['admin_id'])
+        if not admin or not admin.is_admin:
+            flash('Unauthorized access', 'danger')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def get_current_user():
     if 'user_id' in session:
         return User.query.get(session['user_id'])
+    return None
+
+
+def get_current_admin():
+    if 'admin_id' in session:
+        admin = User.query.get(session['admin_id'])
+        if admin and admin.is_admin:
+            return admin
     return None
 
 
@@ -252,6 +275,76 @@ def logout():
     session.clear()
     flash('You have been logged out', 'info')
     return redirect(url_for('index'))
+
+
+# ==================== ROUTES: ADMIN ====================
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
+        
+        admin = User.query.filter_by(username=username).first()
+        
+        if admin and admin.is_admin and admin.check_password(password):
+            session['admin_id'] = admin.id
+            session.permanent = True
+            flash(f'Welcome Admin, {admin.username}!', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid admin credentials', 'danger')
+    
+    return render_template('admin_login.html')
+
+
+@app.route('/admin/dashboard')
+@admin_required
+def admin_dashboard():
+    admin = get_current_admin()
+    total_users = User.query.count()
+    total_reports = HospitalReport.query.count()
+    total_posts = Post.query.count()
+    recent_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).limit(10).all()
+    
+    stats = {
+        'total_users': total_users,
+        'total_reports': total_reports,
+        'total_posts': total_posts
+    }
+    
+    return render_template('admin_dashboard.html', admin=admin, stats=stats, reports=recent_reports)
+
+
+@app.route('/admin/users')
+@admin_required
+def admin_users():
+    admin = get_current_admin()
+    users = User.query.all()
+    return render_template('admin_users.html', admin=admin, users=users)
+
+
+@app.route('/admin/reports')
+@admin_required
+def admin_reports():
+    admin = get_current_admin()
+    reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    return render_template('admin_reports.html', admin=admin, reports=reports)
+
+
+@app.route('/admin/report/<int:report_id>')
+@admin_required
+def admin_view_report(report_id):
+    admin = get_current_admin()
+    report = HospitalReport.query.get_or_404(report_id)
+    return render_template('admin_report_view.html', admin=admin, report=report)
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.clear()
+    flash('Admin logged out', 'info')
+    return redirect(url_for('admin_login'))
 
 
 # ==================== ROUTES: USER DASHBOARD ====================

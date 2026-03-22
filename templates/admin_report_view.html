@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary mb-3">
+                ← Back to All Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Header -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>{{ report.hospital_name }}</h3>
+                    <p class="text-muted mb-1">
+                        <strong>District:</strong> {{ report.district }}
+                    </p>
+                    <p class="text-muted mb-1">
+                        <strong>Period:</strong> {{ report.month_year }}
+                    </p>
+                    <p class="text-muted">
+                        <strong>Submitted By:</strong> {{ report.user.username }} ({{ report.user.email }})
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <small class="text-muted d-block">
+                        <strong>Submitted:</strong> {{ report.created_at.strftime('%B %d, %Y at %H:%M') }}
+                    </small>
+                    <small class="text-muted d-block">
+                        <strong>Last Updated:</strong> {{ report.updated_at.strftime('%B %d, %Y at %H:%M') }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Outpatients Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">📋 Outpatients</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Category</th>
+                        <th>Male</th>
+                        <th>Female</th>
+                        <th>Male Child &lt;14</th>
+                        <th>Female Child &lt;14</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>New</strong></td>
+                        <td>{{ report.outpatients_new_male }}</td>
+                        <td>{{ report.outpatients_new_female }}</td>
+                        <td>{{ report.outpatients_new_male_child }}</td>
+                        <td>{{ report.outpatients_new_female_child }}</td>
+                        <td><strong>{{ report.outpatients_new_male + report.outpatients_new_female + report.outpatients_new_male_child + report.outpatients_new_female_child }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Old</strong></td>
+                        <td>{{ report.outpatients_old_male }}</td>
+                        <td>{{ report.outpatients_old_female }}</td>
+                        <td>{{ report.outpatients_old_male_child }}</td>
+                        <td>{{ report.outpatients_old_female_child }}</td>
+                        <td><strong>{{ report.outpatients_old_male + report.outpatients_old_female + report.outpatients_old_male_child + report.outpatients_old_female_child }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Emergency</strong></td>
+                        <td>{{ report.outpatients_emergency_male }}</td>
+                        <td>{{ report.outpatients_emergency_female }}</td>
+                        <td>{{ report.outpatients_emergency_male_child }}</td>
+                        <td>{{ report.outpatients_emergency_female_child }}</td>
+                        <td><strong>{{ report.outpatients_emergency_male + report.outpatients_emergency_female + report.outpatients_emergency_male_child + report.outpatients_emergency_female_child }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Admissions Summary -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">🏥 Admissions Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Male Admissions:</strong> {{ report.admissions_male }}</p>
+                    <p><strong>Female Admissions:</strong> {{ report.admissions_female }}</p>
+                    <p><strong>Male Child Admissions:</strong> {{ report.admissions_male_child }}</p>
+                    <p><strong>Female Child Admissions:</strong> {{ report.admissions_female_child }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Emergency Admissions:</strong> {{ report.admissions_emergency }}</p>
+                    <p><strong>Medical Legal Cases:</strong> {{ report.medical_legal_cases }}</p>
+                    <p><strong>Same Day Discharge:</strong> {{ report.same_day_admission_discharge }}</p>
+                    <p><strong>Total:</strong> <span class="badge bg-success">{{ report.admissions_male + report.admissions_female + report.admissions_male_child + report.admissions_female_child }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Surgeries & Procedures -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">🔪 Surgeries</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tubectomies:</strong> {{ report.tubectomies }}</p>
+                    <p><strong>Vasectomies:</strong> {{ report.vasectomies }}</p>
+                    <p><strong>Minor Surgeries:</strong> {{ report.minor_surgeries }}</p>
+                    <p><strong>Major Surgeries:</strong> {{ report.major_surgeries }}</p>
+                    <hr>
+                    <p><strong>Total:</strong> <span class="badge bg-warning">{{ report.tubectomies + report.vasectomies + report.minor_surgeries + report.major_surgeries }}</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">👶 Births & Deaths</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Normal Deliveries:</strong> {{ report.normal_deliveries }}</p>
+                    <p><strong>Caesarean Deliveries:</strong> {{ report.caesarean_deliveries }}</p>
+                    <p><strong>Male Births:</strong> {{ report.male_children_births }}</p>
+                    <p><strong>Female Births:</strong> {{ report.female_children_births }}</p>
+                    <p><strong>Deaths:</strong> {{ report.deaths_total }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other Metrics -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">🔬 Other Metrics</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Lab Tests:</strong> {{ report.lab_tests }}</p>
+                    <p><strong>RSBY Cases:</strong> {{ report.rsby_cases }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Cumulative Inpatient Days:</strong> {{ report.cumulative_inpatient_days }}</p>
+                    <p><strong>User Charges Collection:</strong> <span class="badge bg-info">₹{{ "{:,.2f}".format(report.user_charges_collection) }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2 mb-5">
+        <a href="{{ url_for('admin_reports') }}" class="btn btn-secondary">
+            ← Back to Reports
+        </a>
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Report
+        </button>
+    </div>
+</div>
+{% endblock %}

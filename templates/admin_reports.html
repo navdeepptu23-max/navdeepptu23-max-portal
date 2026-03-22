@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 All Hospital Reports</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    {% if reports %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Hospital Name</th>
+                        <th>District</th>
+                        <th>Period</th>
+                        <th>Submitted By</th>
+                        <th>Date Submitted</th>
+                        <th>Total Patients</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                        {% set total_patients = (
+                            report.outpatients_new_male + report.outpatients_new_female + 
+                            report.outpatients_new_male_child + report.outpatients_new_female_child +
+                            report.outpatients_old_male + report.outpatients_old_female +
+                            report.outpatients_old_male_child + report.outpatients_old_female_child
+                        ) %}
+                        <tr>
+                            <td><strong>{{ report.hospital_name }}</strong></td>
+                            <td>{{ report.district }}</td>
+                            <td>{{ report.month_year }}</td>
+                            <td>{{ report.user.username }}</td>
+                            <td><small>{{ report.created_at.strftime('%b %d, %Y %H:%M') }}</small></td>
+                            <td><span class="badge bg-primary">{{ total_patients }}</span></td>
+                            <td>
+                                <a href="{{ url_for('admin_view_report', report_id=report.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            No reports found
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
