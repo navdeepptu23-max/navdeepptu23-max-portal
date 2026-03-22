@@ -170,12 +170,18 @@ def get_current_user():
 @app.route('/')
 def index():
     user = get_current_user()
-    posts = Post.query.order_by(Post.created_at.desc()).limit(10).all()
-    stats = {
-        'total_users': User.query.count(),
-        'total_posts': Post.query.count(),
-        'total_likes': sum(p.likes for p in Post.query.all())
-    }
+    try:
+        posts = Post.query.order_by(Post.created_at.desc()).limit(10).all()
+        stats = {
+            'total_users': User.query.count(),
+            'total_posts': Post.query.count(),
+            'total_likes': sum(p.likes for p in Post.query.all())
+        }
+    except Exception as e:
+        print(f"Database query error: {e}")
+        posts = []
+        stats = {'total_users': 0, 'total_posts': 0, 'total_likes': 0}
+    
     return render_template('index.html', user=user, posts=posts, stats=stats)
 
 
@@ -538,22 +544,36 @@ def inject_user():
 
 # ==================== INITIALIZATION ====================
 
-_db_initialized = False
-
-@app.before_request
-def init_db_on_startup():
-    """Initialize database tables on first request"""
-    global _db_initialized
-    if not _db_initialized:
+def create_database():
+    """Create all database tables"""
+    with app.app_context():
         try:
             db.create_all()
-            print("✓ Database tables created")
-            _db_initialized = True
+            print("✓ Database tables created successfully")
+            return True
         except Exception as e:
-            print(f"⚠ Database init: {e}")
+            print(f"✗ Database creation error: {e}")
+            return False
+
+
+# Initialize database immediately when module loads
+print("🔄 Initializing database on app startup...")
+create_database()
+
+
+# Fallback: Also initialize on first request
+_db_ready = False
+
+@app.before_request
+def ensure_db_ready():
+    global _db_ready
+    if not _db_ready:
+        try:
+            db.create_all()
+            _db_ready = True
+        except Exception as e:
+            print(f"First request DB init: {e}")
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=False)
