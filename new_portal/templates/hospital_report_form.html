@@ -2,38 +2,256 @@
 {% block title %}New Hospital Report | Nova Portal{% endblock %}
 {% block content %}
 <section class="card">
-  <h2>Submit Hospital Report</h2>
-  <form method="post" class="form-grid">
-    <label>Hospital Name
-      <input type="text" name="hospital_name" required />
-    </label>
-    <label>District
-      <input type="text" name="district" required />
-    </label>
-    <label>Month / Year
-      <input type="text" name="month_year" placeholder="Mar 2026" required />
-    </label>
-
-    <div class="stats">
-      <label>Outpatients
-        <input type="number" min="0" name="outpatients" value="0" />
-      </label>
-      <label>Admissions
-        <input type="number" min="0" name="admissions" value="0" />
-      </label>
-      <label>Deliveries
-        <input type="number" min="0" name="deliveries" value="0" />
-      </label>
-      <label>Deaths
-        <input type="number" min="0" name="deaths" value="0" />
-      </label>
+  <h2>Submit HP Indicator Report</h2>
+  <form method="post" id="reportForm">
+    <!-- Basic Info -->
+    <div class="form-grid">
+      <label>Hospital Name <input type="text" name="hospital_name" required /></label>
+      <label>District <input type="text" name="district" required /></label>
+      <label>Month / Year <input type="text" name="month_year" placeholder="Mar 2026" required /></label>
     </div>
 
-    <label>Notes
-      <textarea name="notes" rows="4" placeholder="Optional notes"></textarea>
+    <h3 class="section-title" style="margin-top:1.5rem;">HP Indicator Data</h3>
+    <div class="report-table-wrapper">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th style="min-width:230px;">HP Indicator</th>
+            <th>MALE</th>
+            <th>FEMALE</th>
+            <th>MALE CHILD<br>&lt;14 YRS</th>
+            <th>FEMALE CHILD<br>&lt;14 YRS</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- OUTPATIENTS -->
+          <tr>
+            <td class="indicator bold">NO. OF OUTPATIENTS: NEW</td>
+            <td><input type="number" name="op_new_male" id="op_new_male" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_new_female" id="op_new_female" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_new_male_child" id="op_new_male_child" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_new_female_child" id="op_new_female_child" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" id="op_new_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator" style="padding-left:2rem;">OLD</td>
+            <td><input type="number" name="op_old_male" id="op_old_male" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_old_female" id="op_old_female" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_old_male_child" id="op_old_male_child" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_old_female_child" id="op_old_female_child" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" id="op_old_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator" style="padding-left:2rem;">EMERGENCY</td>
+            <td><input type="number" name="op_emer_male" id="op_emer_male" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_emer_female" id="op_emer_female" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_emer_male_child" id="op_emer_male_child" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" name="op_emer_female_child" id="op_emer_female_child" min="0" value="0" oninput="calcOP()"></td>
+            <td><input type="number" id="op_emer_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr class="row-total">
+            <td class="indicator bold">TOTAL</td>
+            <td><input type="number" id="op_tot_male" readonly value="0" class="computed"></td>
+            <td><input type="number" id="op_tot_female" readonly value="0" class="computed"></td>
+            <td><input type="number" id="op_tot_male_child" readonly value="0" class="computed"></td>
+            <td><input type="number" id="op_tot_female_child" readonly value="0" class="computed"></td>
+            <td><input type="number" id="op_tot_total" readonly value="0" class="computed"></td>
+          </tr>
+
+          <!-- ADMISSIONS -->
+          <tr>
+            <td class="indicator bold">NO. OF ADMISSIONS DURING THE MONTH</td>
+            <td><input type="number" name="adm_male" id="adm_male" min="0" value="0" oninput="calcRow('adm')"></td>
+            <td><input type="number" name="adm_female" id="adm_female" min="0" value="0" oninput="calcRow('adm')"></td>
+            <td><input type="number" name="adm_male_child" id="adm_male_child" min="0" value="0" oninput="calcRow('adm')"></td>
+            <td><input type="number" name="adm_female_child" id="adm_female_child" min="0" value="0" oninput="calcRow('adm')"></td>
+            <td><input type="number" id="adm_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator">NO. OF ADMISSIONS THROUGH EMERGENCY (OUT OF 2)</td>
+            <td><input type="number" name="adm_emer_male" id="adm_emer_male" min="0" value="0" oninput="calcRow('adm_emer')"></td>
+            <td><input type="number" name="adm_emer_female" id="adm_emer_female" min="0" value="0" oninput="calcRow('adm_emer')"></td>
+            <td><input type="number" name="adm_emer_male_child" id="adm_emer_male_child" min="0" value="0" oninput="calcRow('adm_emer')"></td>
+            <td><input type="number" name="adm_emer_female_child" id="adm_emer_female_child" min="0" value="0" oninput="calcRow('adm_emer')"></td>
+            <td><input type="number" id="adm_emer_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator">NO. OF MEDICAL LEGAL CASES ADMITTED (OUT OF 2)</td>
+            <td><input type="number" name="mlc_male" id="mlc_male" min="0" value="0" oninput="calcRow('mlc')"></td>
+            <td><input type="number" name="mlc_female" id="mlc_female" min="0" value="0" oninput="calcRow('mlc')"></td>
+            <td><input type="number" name="mlc_male_child" id="mlc_male_child" min="0" value="0" oninput="calcRow('mlc')"></td>
+            <td><input type="number" name="mlc_female_child" id="mlc_female_child" min="0" value="0" oninput="calcRow('mlc')"></td>
+            <td><input type="number" id="mlc_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator">NO. OF PATIENTS ADMITTED AND DISCHARGED ON THE SAME DAY (OUT OF 2)</td>
+            <td><input type="number" name="sdd_male" id="sdd_male" min="0" value="0" oninput="calcRow('sdd')"></td>
+            <td><input type="number" name="sdd_female" id="sdd_female" min="0" value="0" oninput="calcRow('sdd')"></td>
+            <td><input type="number" name="sdd_male_child" id="sdd_male_child" min="0" value="0" oninput="calcRow('sdd')"></td>
+            <td><input type="number" name="sdd_female_child" id="sdd_female_child" min="0" value="0" oninput="calcRow('sdd')"></td>
+            <td><input type="number" id="sdd_total" readonly value="0" class="computed"></td>
+          </tr>
+
+          <!-- SURGERIES -->
+          <tr>
+            <td class="indicator bold">NO. OF TUBECTOMIES INCLUDING LAPAROSCOPIC</td>
+            <td><input type="number" name="tubec_male" id="tubec_male" min="0" value="0" oninput="calcRow('tubec');calcSurg()"></td>
+            <td><input type="number" name="tubec_female" id="tubec_female" min="0" value="0" oninput="calcRow('tubec');calcSurg()"></td>
+            <td><input type="number" name="tubec_male_child" id="tubec_male_child" min="0" value="0" oninput="calcRow('tubec');calcSurg()"></td>
+            <td><input type="number" name="tubec_female_child" id="tubec_female_child" min="0" value="0" oninput="calcRow('tubec');calcSurg()"></td>
+            <td><input type="number" id="tubec_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator bold">NO. OF VASECTOMIES</td>
+            <td><input type="number" name="vasec_male" id="vasec_male" min="0" value="0" oninput="calcRow('vasec');calcSurg()"></td>
+            <td><input type="number" name="vasec_female" id="vasec_female" min="0" value="0" oninput="calcRow('vasec');calcSurg()"></td>
+            <td><input type="number" name="vasec_male_child" id="vasec_male_child" min="0" value="0" oninput="calcRow('vasec');calcSurg()"></td>
+            <td><input type="number" name="vasec_female_child" id="vasec_female_child" min="0" value="0" oninput="calcRow('vasec');calcSurg()"></td>
+            <td><input type="number" id="vasec_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator">NO. OF MINOR SURGERIES (EXCLUDING VASECTOMIES)</td>
+            <td><input type="number" name="minor_surg_male" id="minor_surg_male" min="0" value="0" oninput="calcRow('minor_surg');calcSurg()"></td>
+            <td><input type="number" name="minor_surg_female" id="minor_surg_female" min="0" value="0" oninput="calcRow('minor_surg');calcSurg()"></td>
+            <td><input type="number" name="minor_surg_male_child" id="minor_surg_male_child" min="0" value="0" oninput="calcRow('minor_surg');calcSurg()"></td>
+            <td><input type="number" name="minor_surg_female_child" id="minor_surg_female_child" min="0" value="0" oninput="calcRow('minor_surg');calcSurg()"></td>
+            <td><input type="number" id="minor_surg_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr>
+            <td class="indicator">NO. OF MAJOR SURGERIES (EXCLUDING TUBECTOMIES)</td>
+            <td><input type="number" name="major_surg_male" id="major_surg_male" min="0" value="0" oninput="calcRow('major_surg');calcSurg()"></td>
+            <td><input type="number" name="major_surg_female" id="major_surg_female" min="0" value="0" oninput="calcRow('major_surg');calcSurg()"></td>
+            <td><input type="number" name="major_surg_male_child" id="major_surg_male_child" min="0" value="0" oninput="calcRow('major_surg');calcSurg()"></td>
+            <td><input type="number" name="major_surg_female_child" id="major_surg_female_child" min="0" value="0" oninput="calcRow('major_surg');calcSurg()"></td>
+            <td><input type="number" id="major_surg_total" readonly value="0" class="computed"></td>
+          </tr>
+          <tr class="row-total">
+            <td class="indicator bold">TOTAL NO. OF SURGERIES (5+6+7+8)</td>
+            <td><input type="number" id="surg_tot_male" readonly value="0" class="computed"></td>
+            <td><input type="number" id="surg_tot_female" readonly value="0" class="computed"></td>
+            <td><input type="number" id="surg_tot_male_child" readonly value="0" class="computed"></td>
+            <td><input type="number" id="surg_tot_female_child" readonly value="0" class="computed"></td>
+            <td><input type="number" id="surg_tot_total" readonly value="0" class="computed"></td>
+          </tr>
+
+          <!-- DEATHS -->
+          <tr>
+            <td class="indicator">NO. OF DEATHS <small>(mention maternal &amp; infant deaths in notes)</small></td>
+            <td><input type="number" name="deaths_male" id="deaths_male" min="0" value="0" oninput="calcRow('deaths')"></td>
+            <td><input type="number" name="deaths_female" id="deaths_female" min="0" value="0" oninput="calcRow('deaths')"></td>
+            <td><input type="number" name="deaths_male_child" id="deaths_male_child" min="0" value="0" oninput="calcRow('deaths')"></td>
+            <td><input type="number" name="deaths_female_child" id="deaths_female_child" min="0" value="0" oninput="calcRow('deaths')"></td>
+            <td><input type="number" id="deaths_total" readonly value="0" class="computed"></td>
+          </tr>
+
+          <!-- DELIVERIES (single value rows) -->
+          <tr>
+            <td class="indicator bold">NO. OF NORMAL DELIVERIES</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="normal_deliveries" id="normal_deliveries" min="0" value="0" oninput="calcDeliv()" style="width:120px;">
+            </td>
+          </tr>
+          <tr>
+            <td class="indicator bold">NO. OF CAESAREAN DELIVERIES</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="caesarean_deliveries" id="caesarean_deliveries" min="0" value="0" oninput="calcDeliv()" style="width:120px;">
+            </td>
+          </tr>
+          <tr class="row-total">
+            <td class="indicator bold">TOTAL NO. OF DELIVERIES (13+14)</td>
+            <td colspan="5" class="single-val">
+              <input type="number" id="total_deliveries" readonly value="0" class="computed" style="width:120px;">
+            </td>
+          </tr>
+          <tr>
+            <td class="indicator">MALE CH (EXCLUDING STILL BIRTH OUT OF 15)</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="male_children" min="0" value="0" style="width:120px;">
+            </td>
+          </tr>
+          <tr>
+            <td class="indicator">FEMALE CH (EXCLUDING STILL BIRTH OUT OF 15)</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="female_children" min="0" value="0" style="width:120px;">
+            </td>
+          </tr>
+
+          <!-- OTHER STATS -->
+          <tr>
+            <td class="indicator bold">NO. OF LAB-TESTS</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="lab_tests" min="0" value="0" style="width:120px;">
+            </td>
+          </tr>
+          <tr>
+            <td class="indicator">TOTAL NO. OF CUMULATIVE INPATIENTS DAYS</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="cumulative_inpatient_days" min="0" value="0" style="width:120px;">
+            </td>
+          </tr>
+          <tr>
+            <td class="indicator">User Charges Collection during the month (in Rs.)</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="user_charges_collection" min="0" value="0" style="width:120px;">
+            </td>
+          </tr>
+          <tr>
+            <td class="indicator">Number of RSBY Cases during the month</td>
+            <td colspan="5" class="single-val">
+              <input type="number" name="rsby_cases" min="0" value="0" style="width:120px;">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <label style="margin-top:1rem;display:block;">Notes / Remarks
+      <textarea name="notes" rows="3" placeholder="Mention maternal &amp; infant deaths here if any"></textarea>
     </label>
 
-    <button class="btn primary" type="submit">Submit Report</button>
+    <div class="cta-row" style="margin-top:1rem;">
+      <button class="btn primary" type="submit">Submit Report</button>
+      <a class="btn ghost" href="{{ url_for('hospital_reports') }}">Cancel</a>
+    </div>
   </form>
 </section>
+
+<script>
+function v(id) { return parseInt(document.getElementById(id)?.value) || 0; }
+function sv(id, val) { const el = document.getElementById(id); if(el) el.value = val; }
+
+function calcRow(prefix) {
+  const m = v(prefix+'_male'), f = v(prefix+'_female'),
+        mc = v(prefix+'_male_child'), fc = v(prefix+'_female_child');
+  sv(prefix+'_total', m+f+mc+fc);
+}
+
+function calcOP() {
+  ['op_new','op_old','op_emer'].forEach(p => {
+    const m=v(p+'_male'),f=v(p+'_female'),mc=v(p+'_male_child'),fc=v(p+'_female_child');
+    sv(p+'_total', m+f+mc+fc);
+  });
+  const cols = ['male','female','male_child','female_child'];
+  cols.forEach(c => {
+    const t = v('op_new_'+c)+v('op_old_'+c)+v('op_emer_'+c);
+    sv('op_tot_'+c, t);
+  });
+  sv('op_tot_total', v('op_tot_male')+v('op_tot_female')+v('op_tot_male_child')+v('op_tot_female_child'));
+}
+
+function calcSurg() {
+  const rows = ['tubec','vasec','minor_surg','major_surg'];
+  const cols = ['male','female','male_child','female_child'];
+  cols.forEach(c => {
+    sv('surg_tot_'+c, rows.reduce((s,r) => s+v(r+'_'+c), 0));
+  });
+  sv('surg_tot_total', v('surg_tot_male')+v('surg_tot_female')+v('surg_tot_male_child')+v('surg_tot_female_child'));
+}
+
+function calcDeliv() {
+  sv('total_deliveries', v('normal_deliveries')+v('caesarean_deliveries'));
+}
+window.onload = function() { calcOP(); ['adm','adm_emer','mlc','sdd','tubec','vasec','minor_surg','major_surg','deaths'].forEach(calcRow); calcSurg(); calcDeliv(); };
+</script>
 {% endblock %}

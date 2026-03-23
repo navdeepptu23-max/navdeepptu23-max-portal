@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ report.hospital_name }} — {{ report.month_year }} | HP Report</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; background: #fff; padding: 1cm; }
+    h1 { font-size: 14pt; text-align: center; margin-bottom: 4px; }
+    .subtitle { text-align: center; font-size: 10pt; color: #444; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #555; padding: 4px 6px; }
+    th { background: #c2410c; color: #fff; font-size: 10pt; text-align: center; }
+    td { font-size: 10pt; vertical-align: middle; }
+    td.indicator { font-weight: 500; min-width: 200px; }
+    td.center, td.tot { text-align: center; }
+    tr.row-total td { background: #fff3e0; font-weight: bold; }
+    .no-print { text-align: center; margin-bottom: 12px; }
+    .no-print button { padding: 8px 20px; background: #c2410c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11pt; margin: 0 4px; }
+    .no-print a { padding: 8px 20px; background: #6b7280; color: #fff; border-radius: 4px; text-decoration: none; font-size: 11pt; margin: 0 4px; }
+    @media print {
+      .no-print { display: none; }
+      body { padding: 0.5cm; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print">
+  <button onclick="window.print()">&#128438; Print / Save as PDF</button>
+  <a href="javascript:history.back()">&#8592; Back</a>
+</div>
+
+{% set op_new_t = report.op_new_male+report.op_new_female+report.op_new_male_child+report.op_new_female_child %}
+{% set op_old_t = report.op_old_male+report.op_old_female+report.op_old_male_child+report.op_old_female_child %}
+{% set op_em_t  = report.op_emer_male+report.op_emer_female+report.op_emer_male_child+report.op_emer_female_child %}
+{% set op_tot_m = report.op_new_male+report.op_old_male+report.op_emer_male %}
+{% set op_tot_f = report.op_new_female+report.op_old_female+report.op_emer_female %}
+{% set op_tot_mc= report.op_new_male_child+report.op_old_male_child+report.op_emer_male_child %}
+{% set op_tot_fc= report.op_new_female_child+report.op_old_female_child+report.op_emer_female_child %}
+{% set op_total = op_tot_m+op_tot_f+op_tot_mc+op_tot_fc %}
+{% set adm_t = report.adm_male+report.adm_female+report.adm_male_child+report.adm_female_child %}
+{% set adm_em_t = report.adm_emer_male+report.adm_emer_female+report.adm_emer_male_child+report.adm_emer_female_child %}
+{% set mlc_t = report.mlc_male+report.mlc_female+report.mlc_male_child+report.mlc_female_child %}
+{% set sdd_t = report.sdd_male+report.sdd_female+report.sdd_male_child+report.sdd_female_child %}
+{% set tub_t = report.tubec_male+report.tubec_female+report.tubec_male_child+report.tubec_female_child %}
+{% set vas_t = report.vasec_male+report.vasec_female+report.vasec_male_child+report.vasec_female_child %}
+{% set min_t = report.minor_surg_male+report.minor_surg_female+report.minor_surg_male_child+report.minor_surg_female_child %}
+{% set maj_t = report.major_surg_male+report.major_surg_female+report.major_surg_male_child+report.major_surg_female_child %}
+{% set st_m = report.tubec_male+report.vasec_male+report.minor_surg_male+report.major_surg_male %}
+{% set st_f = report.tubec_female+report.vasec_female+report.minor_surg_female+report.major_surg_female %}
+{% set st_mc= report.tubec_male_child+report.vasec_male_child+report.minor_surg_male_child+report.major_surg_male_child %}
+{% set st_fc= report.tubec_female_child+report.vasec_female_child+report.minor_surg_female_child+report.major_surg_female_child %}
+{% set surg_total = st_m+st_f+st_mc+st_fc %}
+{% set dth_t = report.deaths_male+report.deaths_female+report.deaths_male_child+report.deaths_female_child %}
+{% set total_deliv = report.normal_deliveries+report.caesarean_deliveries %}
+
+<h1>HP Indicator Report</h1>
+<p class="subtitle">
+  Hospital: <strong>{{ report.hospital_name }}</strong> &nbsp;|&nbsp;
+  District: <strong>{{ report.district }}</strong> &nbsp;|&nbsp;
+  Month: <strong>{{ report.month_year }}</strong> &nbsp;|&nbsp;
+  Submitted: {{ report.created_at.strftime('%d %b %Y') }}
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:36%;">HP Indicator</th>
+      <th>MALE</th>
+      <th>FEMALE</th>
+      <th>MALE CHILD &lt;14 YRS</th>
+      <th>FEMALE CHILD &lt;14 YRS</th>
+      <th>TOTAL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="indicator"><strong>NO. OF OUTPATIENTS: NEW</strong></td><td class="center">{{ report.op_new_male }}</td><td class="center">{{ report.op_new_female }}</td><td class="center">{{ report.op_new_male_child }}</td><td class="center">{{ report.op_new_female_child }}</td><td class="tot">{{ op_new_t }}</td></tr>
+    <tr><td class="indicator" style="padding-left:16px;">OLD</td><td class="center">{{ report.op_old_male }}</td><td class="center">{{ report.op_old_female }}</td><td class="center">{{ report.op_old_male_child }}</td><td class="center">{{ report.op_old_female_child }}</td><td class="tot">{{ op_old_t }}</td></tr>
+    <tr><td class="indicator" style="padding-left:16px;">EMERGENCY</td><td class="center">{{ report.op_emer_male }}</td><td class="center">{{ report.op_emer_female }}</td><td class="center">{{ report.op_emer_male_child }}</td><td class="center">{{ report.op_emer_female_child }}</td><td class="tot">{{ op_em_t }}</td></tr>
+    <tr class="row-total"><td class="indicator">TOTAL</td><td class="center">{{ op_tot_m }}</td><td class="center">{{ op_tot_f }}</td><td class="center">{{ op_tot_mc }}</td><td class="center">{{ op_tot_fc }}</td><td class="tot">{{ op_total }}</td></tr>
+    <tr><td class="indicator"><strong>NO. OF ADMISSIONS DURING THE MONTH</strong></td><td class="center">{{ report.adm_male }}</td><td class="center">{{ report.adm_female }}</td><td class="center">{{ report.adm_male_child }}</td><td class="center">{{ report.adm_female_child }}</td><td class="tot">{{ adm_t }}</td></tr>
+    <tr><td class="indicator">NO. OF ADMISSIONS THROUGH EMERGENCY (OUT OF 2)</td><td class="center">{{ report.adm_emer_male }}</td><td class="center">{{ report.adm_emer_female }}</td><td class="center">{{ report.adm_emer_male_child }}</td><td class="center">{{ report.adm_emer_female_child }}</td><td class="tot">{{ adm_em_t }}</td></tr>
+    <tr><td class="indicator">NO. OF MEDICAL LEGAL CASES ADMITTED (OUT OF 2)</td><td class="center">{{ report.mlc_male }}</td><td class="center">{{ report.mlc_female }}</td><td class="center">{{ report.mlc_male_child }}</td><td class="center">{{ report.mlc_female_child }}</td><td class="tot">{{ mlc_t }}</td></tr>
+    <tr><td class="indicator">NO. OF PATIENTS ADMITTED AND DISCHARGED ON THE SAME DAY (OUT OF 2)</td><td class="center">{{ report.sdd_male }}</td><td class="center">{{ report.sdd_female }}</td><td class="center">{{ report.sdd_male_child }}</td><td class="center">{{ report.sdd_female_child }}</td><td class="tot">{{ sdd_t }}</td></tr>
+    <tr><td class="indicator"><strong>NO. OF TUBECTOMIES INCLUDING LAPAROSCOPIC</strong></td><td class="center">{{ report.tubec_male }}</td><td class="center">{{ report.tubec_female }}</td><td class="center">{{ report.tubec_male_child }}</td><td class="center">{{ report.tubec_female_child }}</td><td class="tot">{{ tub_t }}</td></tr>
+    <tr><td class="indicator"><strong>NO. OF VASECTOMIES</strong></td><td class="center">{{ report.vasec_male }}</td><td class="center">{{ report.vasec_female }}</td><td class="center">{{ report.vasec_male_child }}</td><td class="center">{{ report.vasec_female_child }}</td><td class="tot">{{ vas_t }}</td></tr>
+    <tr><td class="indicator">NO. OF MINOR SURGERIES (EXCLUDING VASECTOMIES)</td><td class="center">{{ report.minor_surg_male }}</td><td class="center">{{ report.minor_surg_female }}</td><td class="center">{{ report.minor_surg_male_child }}</td><td class="center">{{ report.minor_surg_female_child }}</td><td class="tot">{{ min_t }}</td></tr>
+    <tr><td class="indicator">NO. OF MAJOR SURGERIES (EXCLUDING TUBECTOMIES)</td><td class="center">{{ report.major_surg_male }}</td><td class="center">{{ report.major_surg_female }}</td><td class="center">{{ report.major_surg_male_child }}</td><td class="center">{{ report.major_surg_female_child }}</td><td class="tot">{{ maj_t }}</td></tr>
+    <tr class="row-total"><td class="indicator">TOTAL NO. OF SURGERIES (5+6+7+8)</td><td class="center">{{ st_m }}</td><td class="center">{{ st_f }}</td><td class="center">{{ st_mc }}</td><td class="center">{{ st_fc }}</td><td class="tot">{{ surg_total }}</td></tr>
+    <tr><td class="indicator">NO. OF DEATHS <small>(mention maternal &amp; infant deaths in notes)</small></td><td class="center">{{ report.deaths_male }}</td><td class="center">{{ report.deaths_female }}</td><td class="center">{{ report.deaths_male_child }}</td><td class="center">{{ report.deaths_female_child }}</td><td class="tot">{{ dth_t }}</td></tr>
+    <tr><td class="indicator"><strong>NO. OF NORMAL DELIVERIES</strong></td><td colspan="5" class="center">{{ report.normal_deliveries }}</td></tr>
+    <tr><td class="indicator"><strong>NO. OF CAESAREAN DELIVERIES</strong></td><td colspan="5" class="center">{{ report.caesarean_deliveries }}</td></tr>
+    <tr class="row-total"><td class="indicator">TOTAL NO. OF DELIVERIES (13+14)</td><td colspan="5" class="center">{{ total_deliv }}</td></tr>
+    <tr><td class="indicator">MALE CH (EXCLUDING STILL BIRTH OUT OF 15)</td><td colspan="5" class="center">{{ report.male_children }}</td></tr>
+    <tr><td class="indicator">FEMALE CH (EXCLUDING STILL BIRTH OUT OF 15)</td><td colspan="5" class="center">{{ report.female_children }}</td></tr>
+    <tr><td class="indicator"><strong>NO. OF LAB-TESTS</strong></td><td colspan="5" class="center">{{ report.lab_tests }}</td></tr>
+    <tr><td class="indicator">TOTAL NO. OF CUMULATIVE INPATIENTS DAYS</td><td colspan="5" class="center">{{ report.cumulative_inpatient_days }}</td></tr>
+    <tr><td class="indicator">User Charges Collection during the month (in Rs.)</td><td colspan="5" class="center">{{ report.user_charges_collection }}</td></tr>
+    <tr><td class="indicator">Number of RSBY Cases during the month</td><td colspan="5" class="center">{{ report.rsby_cases }}</td></tr>
+    {% if report.notes %}
+    <tr><td class="indicator"><strong>Notes / Remarks</strong></td><td colspan="5" style="padding:4px 6px;">{{ report.notes }}</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+</body>
+</html>

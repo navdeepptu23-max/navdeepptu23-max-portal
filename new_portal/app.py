@@ -45,12 +45,85 @@ class HospitalReport(db.Model):
     hospital_name = db.Column(db.String(255), nullable=False)
     district = db.Column(db.String(100), nullable=False)
     month_year = db.Column(db.String(20), nullable=False)
-    outpatients = db.Column(db.Integer, default=0)
-    admissions = db.Column(db.Integer, default=0)
-    deliveries = db.Column(db.Integer, default=0)
-    deaths = db.Column(db.Integer, default=0)
-    notes = db.Column(db.Text, default="")
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    notes = db.Column(db.Text, default="")
+
+    # OUTPATIENTS — New
+    op_new_male = db.Column(db.Integer, default=0)
+    op_new_female = db.Column(db.Integer, default=0)
+    op_new_male_child = db.Column(db.Integer, default=0)
+    op_new_female_child = db.Column(db.Integer, default=0)
+    # OUTPATIENTS — Old
+    op_old_male = db.Column(db.Integer, default=0)
+    op_old_female = db.Column(db.Integer, default=0)
+    op_old_male_child = db.Column(db.Integer, default=0)
+    op_old_female_child = db.Column(db.Integer, default=0)
+    # OUTPATIENTS — Emergency
+    op_emer_male = db.Column(db.Integer, default=0)
+    op_emer_female = db.Column(db.Integer, default=0)
+    op_emer_male_child = db.Column(db.Integer, default=0)
+    op_emer_female_child = db.Column(db.Integer, default=0)
+
+    # Admissions during the month
+    adm_male = db.Column(db.Integer, default=0)
+    adm_female = db.Column(db.Integer, default=0)
+    adm_male_child = db.Column(db.Integer, default=0)
+    adm_female_child = db.Column(db.Integer, default=0)
+    # Admissions through emergency
+    adm_emer_male = db.Column(db.Integer, default=0)
+    adm_emer_female = db.Column(db.Integer, default=0)
+    adm_emer_male_child = db.Column(db.Integer, default=0)
+    adm_emer_female_child = db.Column(db.Integer, default=0)
+    # Medical legal cases admitted
+    mlc_male = db.Column(db.Integer, default=0)
+    mlc_female = db.Column(db.Integer, default=0)
+    mlc_male_child = db.Column(db.Integer, default=0)
+    mlc_female_child = db.Column(db.Integer, default=0)
+    # Admitted & discharged same day
+    sdd_male = db.Column(db.Integer, default=0)
+    sdd_female = db.Column(db.Integer, default=0)
+    sdd_male_child = db.Column(db.Integer, default=0)
+    sdd_female_child = db.Column(db.Integer, default=0)
+
+    # Tubectomies (incl. laparoscopic)
+    tubec_male = db.Column(db.Integer, default=0)
+    tubec_female = db.Column(db.Integer, default=0)
+    tubec_male_child = db.Column(db.Integer, default=0)
+    tubec_female_child = db.Column(db.Integer, default=0)
+    # Vasectomies
+    vasec_male = db.Column(db.Integer, default=0)
+    vasec_female = db.Column(db.Integer, default=0)
+    vasec_male_child = db.Column(db.Integer, default=0)
+    vasec_female_child = db.Column(db.Integer, default=0)
+    # Minor surgeries (exc. vasectomies)
+    minor_surg_male = db.Column(db.Integer, default=0)
+    minor_surg_female = db.Column(db.Integer, default=0)
+    minor_surg_male_child = db.Column(db.Integer, default=0)
+    minor_surg_female_child = db.Column(db.Integer, default=0)
+    # Major surgeries (exc. tubectomies)
+    major_surg_male = db.Column(db.Integer, default=0)
+    major_surg_female = db.Column(db.Integer, default=0)
+    major_surg_male_child = db.Column(db.Integer, default=0)
+    major_surg_female_child = db.Column(db.Integer, default=0)
+
+    # Deaths
+    deaths_male = db.Column(db.Integer, default=0)
+    deaths_female = db.Column(db.Integer, default=0)
+    deaths_male_child = db.Column(db.Integer, default=0)
+    deaths_female_child = db.Column(db.Integer, default=0)
+
+    # Deliveries (single values — not split by gender)
+    normal_deliveries = db.Column(db.Integer, default=0)
+    caesarean_deliveries = db.Column(db.Integer, default=0)
+    # Children born (excluding stillbirth, referenced from deliveries)
+    male_children = db.Column(db.Integer, default=0)
+    female_children = db.Column(db.Integer, default=0)
+
+    # Aggregate / other stats
+    lab_tests = db.Column(db.Integer, default=0)
+    cumulative_inpatient_days = db.Column(db.Integer, default=0)
+    user_charges_collection = db.Column(db.Integer, default=0)
+    rsby_cases = db.Column(db.Integer, default=0)
 
 
 def login_required(view_func):
@@ -193,15 +266,42 @@ def new_hospital_report():
             flash("Hospital name, district, and month/year are required.", "danger")
             return redirect(url_for("new_hospital_report"))
 
+        def fi(name):
+            return request.form.get(name, 0, type=int)
+
         report = HospitalReport(
             user_id=user.id,
             hospital_name=hospital_name,
             district=district,
             month_year=month_year,
-            outpatients=request.form.get("outpatients", 0, type=int),
-            admissions=request.form.get("admissions", 0, type=int),
-            deliveries=request.form.get("deliveries", 0, type=int),
-            deaths=request.form.get("deaths", 0, type=int),
+            op_new_male=fi("op_new_male"), op_new_female=fi("op_new_female"),
+            op_new_male_child=fi("op_new_male_child"), op_new_female_child=fi("op_new_female_child"),
+            op_old_male=fi("op_old_male"), op_old_female=fi("op_old_female"),
+            op_old_male_child=fi("op_old_male_child"), op_old_female_child=fi("op_old_female_child"),
+            op_emer_male=fi("op_emer_male"), op_emer_female=fi("op_emer_female"),
+            op_emer_male_child=fi("op_emer_male_child"), op_emer_female_child=fi("op_emer_female_child"),
+            adm_male=fi("adm_male"), adm_female=fi("adm_female"),
+            adm_male_child=fi("adm_male_child"), adm_female_child=fi("adm_female_child"),
+            adm_emer_male=fi("adm_emer_male"), adm_emer_female=fi("adm_emer_female"),
+            adm_emer_male_child=fi("adm_emer_male_child"), adm_emer_female_child=fi("adm_emer_female_child"),
+            mlc_male=fi("mlc_male"), mlc_female=fi("mlc_female"),
+            mlc_male_child=fi("mlc_male_child"), mlc_female_child=fi("mlc_female_child"),
+            sdd_male=fi("sdd_male"), sdd_female=fi("sdd_female"),
+            sdd_male_child=fi("sdd_male_child"), sdd_female_child=fi("sdd_female_child"),
+            tubec_male=fi("tubec_male"), tubec_female=fi("tubec_female"),
+            tubec_male_child=fi("tubec_male_child"), tubec_female_child=fi("tubec_female_child"),
+            vasec_male=fi("vasec_male"), vasec_female=fi("vasec_female"),
+            vasec_male_child=fi("vasec_male_child"), vasec_female_child=fi("vasec_female_child"),
+            minor_surg_male=fi("minor_surg_male"), minor_surg_female=fi("minor_surg_female"),
+            minor_surg_male_child=fi("minor_surg_male_child"), minor_surg_female_child=fi("minor_surg_female_child"),
+            major_surg_male=fi("major_surg_male"), major_surg_female=fi("major_surg_female"),
+            major_surg_male_child=fi("major_surg_male_child"), major_surg_female_child=fi("major_surg_female_child"),
+            deaths_male=fi("deaths_male"), deaths_female=fi("deaths_female"),
+            deaths_male_child=fi("deaths_male_child"), deaths_female_child=fi("deaths_female_child"),
+            normal_deliveries=fi("normal_deliveries"), caesarean_deliveries=fi("caesarean_deliveries"),
+            male_children=fi("male_children"), female_children=fi("female_children"),
+            lab_tests=fi("lab_tests"), cumulative_inpatient_days=fi("cumulative_inpatient_days"),
+            user_charges_collection=fi("user_charges_collection"), rsby_cases=fi("rsby_cases"),
             notes=request.form.get("notes", "").strip(),
         )
         db.session.add(report)
@@ -230,6 +330,194 @@ def hospital_report_view(report_id):
         flash("You do not have permission to view this report.", "danger")
         return redirect(url_for("hospital_reports"))
     return render_template("hospital_report_view.html", user=user, report=report)
+
+
+@app.route("/hospital/report/<int:report_id>/print")
+@login_required
+def hospital_report_print(report_id):
+    user = current_user()
+    report = HospitalReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission.", "danger")
+        return redirect(url_for("hospital_reports"))
+    return render_template("hospital_report_print.html", report=report)
+
+
+@app.route("/hospital/report/<int:report_id>/export/csv")
+@login_required
+def hospital_report_csv(report_id):
+    user = current_user()
+    report = HospitalReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission.", "danger")
+        return redirect(url_for("hospital_reports"))
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    # Header row
+    writer.writerow(["HP Indicator", "Male", "Female", "Male Child <14", "Female Child <14", "Total"])
+    rows = [
+        ("NO. OF OUTPATIENTS: NEW", report.op_new_male, report.op_new_female, report.op_new_male_child, report.op_new_female_child),
+        ("NO. OF OUTPATIENTS: OLD", report.op_old_male, report.op_old_female, report.op_old_male_child, report.op_old_female_child),
+        ("NO. OF OUTPATIENTS: EMERGENCY", report.op_emer_male, report.op_emer_female, report.op_emer_male_child, report.op_emer_female_child),
+        ("OUTPATIENTS TOTAL",
+         (report.op_new_male+report.op_old_male+report.op_emer_male),
+         (report.op_new_female+report.op_old_female+report.op_emer_female),
+         (report.op_new_male_child+report.op_old_male_child+report.op_emer_male_child),
+         (report.op_new_female_child+report.op_old_female_child+report.op_emer_female_child)),
+        ("NO. OF ADMISSIONS DURING THE MONTH", report.adm_male, report.adm_female, report.adm_male_child, report.adm_female_child),
+        ("NO. OF ADMISSIONS THROUGH EMERGENCY (OUT OF 2)", report.adm_emer_male, report.adm_emer_female, report.adm_emer_male_child, report.adm_emer_female_child),
+        ("NO. OF MEDICAL LEGAL CASES ADMITTED (OUT OF 2)", report.mlc_male, report.mlc_female, report.mlc_male_child, report.mlc_female_child),
+        ("NO. OF PATIENTS ADMITTED & DISCHARGED SAME DAY (OUT OF 2)", report.sdd_male, report.sdd_female, report.sdd_male_child, report.sdd_female_child),
+        ("NO. OF TUBECTOMIES INCLUDING LAPAROSCOPIC", report.tubec_male, report.tubec_female, report.tubec_male_child, report.tubec_female_child),
+        ("NO. OF VASECTOMIES", report.vasec_male, report.vasec_female, report.vasec_male_child, report.vasec_female_child),
+        ("NO. OF MINOR SURGERIES (EXC. VASECTOMIES)", report.minor_surg_male, report.minor_surg_female, report.minor_surg_male_child, report.minor_surg_female_child),
+        ("NO. OF MAJOR SURGERIES (EXC. TUBECTOMIES)", report.major_surg_male, report.major_surg_female, report.major_surg_male_child, report.major_surg_female_child),
+        ("TOTAL NO. OF SURGERIES",
+         report.tubec_male+report.vasec_male+report.minor_surg_male+report.major_surg_male,
+         report.tubec_female+report.vasec_female+report.minor_surg_female+report.major_surg_female,
+         report.tubec_male_child+report.vasec_male_child+report.minor_surg_male_child+report.major_surg_male_child,
+         report.tubec_female_child+report.vasec_female_child+report.minor_surg_female_child+report.major_surg_female_child),
+        ("NO. OF DEATHS", report.deaths_male, report.deaths_female, report.deaths_male_child, report.deaths_female_child),
+    ]
+    for label, m, f, mc, fc in rows:
+        writer.writerow([label, m, f, mc, fc, m+f+mc+fc])
+    writer.writerow([])
+    writer.writerow(["NO. OF NORMAL DELIVERIES", report.normal_deliveries])
+    writer.writerow(["NO. OF CAESAREAN DELIVERIES", report.caesarean_deliveries])
+    writer.writerow(["TOTAL NO. OF DELIVERIES", report.normal_deliveries + report.caesarean_deliveries])
+    writer.writerow(["MALE CH (EXC. STILL BIRTH OUT OF 15)", report.male_children])
+    writer.writerow(["FEMALE CH (EXC. STILL BIRTH OUT OF 15)", report.female_children])
+    writer.writerow(["NO. OF LAB-TESTS", report.lab_tests])
+    writer.writerow(["TOTAL NO. OF CUMULATIVE INPATIENTS DAYS", report.cumulative_inpatient_days])
+    writer.writerow(["USER CHARGES COLLECTION (Rs.)", report.user_charges_collection])
+    writer.writerow(["NUMBER OF RSBY CASES", report.rsby_cases])
+    if report.notes:
+        writer.writerow(["NOTES", report.notes])
+
+    fname = f"{report.hospital_name}_{report.month_year}_report.csv".replace(" ", "_")
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = f"attachment; filename={fname}"
+    return response
+
+
+@app.route("/hospital/report/<int:report_id>/export/excel")
+@login_required
+def hospital_report_excel(report_id):
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    import openpyxl
+
+    user = current_user()
+    report = HospitalReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission.", "danger")
+        return redirect(url_for("hospital_reports"))
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "HP Report"
+
+    hdr_fill = PatternFill("solid", fgColor="C2410C")
+    hdr_font = Font(bold=True, color="FFFFFF", size=10)
+    sec_fill = PatternFill("solid", fgColor="FFF3E0")
+    sec_font = Font(bold=True, size=10)
+    tot_fill = PatternFill("solid", fgColor="FED7AA")
+    thin = Side(style="thin")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+    def cell(row, col, val, fill=None, font=None, align=None):
+        c = ws.cell(row=row, column=col, value=val)
+        c.border = border
+        if fill: c.fill = fill
+        if font: c.font = font
+        c.alignment = align or center
+        return c
+
+    # Title
+    ws.merge_cells("A1:F1")
+    c = ws["A1"]
+    c.value = f"Hospital Performance Report — {report.hospital_name} | {report.district} | {report.month_year}"
+    c.font = Font(bold=True, size=12)
+    c.alignment = Alignment(horizontal="center")
+
+    # Column headers
+    headers = ["HP Indicator", "MALE", "FEMALE", "MALE CHILD <14 YRS", "FEMALE CHILD <14 YRS", "TOTAL"]
+    for ci, h in enumerate(headers, 1):
+        cell(2, ci, h, hdr_fill, hdr_font, center)
+
+    def add_row(row_num, label, m, f, mc, fc, fill=None):
+        cell(row_num, 1, label, fill, align=left)
+        for ci, v in enumerate([m, f, mc, fc, m+f+mc+fc], 2):
+            cell(row_num, ci, v, fill, align=center)
+
+    r = 3
+    add_row(r, "NO. OF OUTPATIENTS: NEW", report.op_new_male, report.op_new_female, report.op_new_male_child, report.op_new_female_child); r+=1
+    add_row(r, "OLD", report.op_old_male, report.op_old_female, report.op_old_male_child, report.op_old_female_child); r+=1
+    add_row(r, "EMERGENCY", report.op_emer_male, report.op_emer_female, report.op_emer_male_child, report.op_emer_female_child); r+=1
+    op_tm = report.op_new_male+report.op_old_male+report.op_emer_male
+    op_tf = report.op_new_female+report.op_old_female+report.op_emer_female
+    op_tmc = report.op_new_male_child+report.op_old_male_child+report.op_emer_male_child
+    op_tfc = report.op_new_female_child+report.op_old_female_child+report.op_emer_female_child
+    add_row(r, "TOTAL", op_tm, op_tf, op_tmc, op_tfc, tot_fill); r+=1
+    add_row(r, "NO. OF ADMISSIONS DURING THE MONTH", report.adm_male, report.adm_female, report.adm_male_child, report.adm_female_child); r+=1
+    add_row(r, "NO. OF ADMISSIONS THROUGH EMERGENCY (OUT OF 2)", report.adm_emer_male, report.adm_emer_female, report.adm_emer_male_child, report.adm_emer_female_child); r+=1
+    add_row(r, "NO. OF MEDICAL LEGAL CASES ADMITTED (OUT OF 2)", report.mlc_male, report.mlc_female, report.mlc_male_child, report.mlc_female_child); r+=1
+    add_row(r, "NO. OF PATIENTS ADMITTED & DISCHARGED SAME DAY (OUT OF 2)", report.sdd_male, report.sdd_female, report.sdd_male_child, report.sdd_female_child); r+=1
+    add_row(r, "NO. OF TUBECTOMIES INCLUDING LAPAROSCOPIC", report.tubec_male, report.tubec_female, report.tubec_male_child, report.tubec_female_child); r+=1
+    add_row(r, "NO. OF VASECTOMIES", report.vasec_male, report.vasec_female, report.vasec_male_child, report.vasec_female_child); r+=1
+    add_row(r, "NO. OF MINOR SURGERIES (EXC. VASECTOMIES)", report.minor_surg_male, report.minor_surg_female, report.minor_surg_male_child, report.minor_surg_female_child); r+=1
+    add_row(r, "NO. OF MAJOR SURGERIES (EXC. TUBECTOMIES)", report.major_surg_male, report.major_surg_female, report.major_surg_male_child, report.major_surg_female_child); r+=1
+    st_m = report.tubec_male+report.vasec_male+report.minor_surg_male+report.major_surg_male
+    st_f = report.tubec_female+report.vasec_female+report.minor_surg_female+report.major_surg_female
+    st_mc = report.tubec_male_child+report.vasec_male_child+report.minor_surg_male_child+report.major_surg_male_child
+    st_fc = report.tubec_female_child+report.vasec_female_child+report.minor_surg_female_child+report.major_surg_female_child
+    add_row(r, "TOTAL NO. OF SURGERIES (5+6+7+8)", st_m, st_f, st_mc, st_fc, tot_fill); r+=1
+    add_row(r, "NO. OF DEATHS (mention maternal & infant in notes)", report.deaths_male, report.deaths_female, report.deaths_male_child, report.deaths_female_child); r+=1
+
+    # Single-value rows
+    single_rows = [
+        ("NO. OF NORMAL DELIVERIES", report.normal_deliveries),
+        ("NO. OF CAESAREAN DELIVERIES", report.caesarean_deliveries),
+        ("TOTAL NO. OF DELIVERIES (13+14)", report.normal_deliveries + report.caesarean_deliveries),
+        ("MALE CH (EXCLUDING STILL BIRTH OUT OF 15)", report.male_children),
+        ("FEMALE CH (EXCLUDING STILL BIRTH OUT OF 15)", report.female_children),
+        ("NO. OF LAB-TESTS", report.lab_tests),
+        ("TOTAL NO. OF CUMULATIVE INPATIENTS DAYS", report.cumulative_inpatient_days),
+        ("USER CHARGES COLLECTION DURING THE MONTH (Rs.)", report.user_charges_collection),
+        ("NUMBER OF RSBY CASES DURING THE MONTH", report.rsby_cases),
+    ]
+    for label, val in single_rows:
+        cell(r, 1, label, align=left)
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+        c2 = ws.cell(row=r, column=2, value=val)
+        c2.border = border
+        c2.alignment = center
+        r += 1
+
+    if report.notes:
+        cell(r, 1, "NOTES", align=left)
+        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
+        cn = ws.cell(row=r, column=2, value=report.notes)
+        cn.border = border
+        cn.alignment = left
+
+    ws.column_dimensions["A"].width = 48
+    for col in ["B", "C", "D", "E", "F"]:
+        ws.column_dimensions[col].width = 14
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    fname = f"{report.hospital_name}_{report.month_year}_report.xlsx".replace(" ", "_")
+    response = make_response(output.read())
+    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    response.headers["Content-Disposition"] = f"attachment; filename={fname}"
+    return response
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
@@ -262,7 +550,12 @@ def admin_dashboard():
     stats = {
         "total_users": len(users),
         "total_reports": len(reports),
-        "total_outpatients": sum(r.outpatients for r in reports),
+        "total_outpatients": sum(
+            (r.op_new_male or 0) + (r.op_new_female or 0) + (r.op_new_male_child or 0) + (r.op_new_female_child or 0) +
+            (r.op_old_male or 0) + (r.op_old_female or 0) + (r.op_old_male_child or 0) + (r.op_old_female_child or 0) +
+            (r.op_emer_male or 0) + (r.op_emer_female or 0) + (r.op_emer_male_child or 0) + (r.op_emer_female_child or 0)
+            for r in reports
+        ),
     }
     return render_template("admin_dashboard.html", user=current_user(), admin=admin, users=users, reports=reports, stats=stats)
 
@@ -475,15 +768,43 @@ def admin_report_edit(report_id):
         report.hospital_name = request.form.get("hospital_name", "").strip()
         report.district = request.form.get("district", "").strip()
         report.month_year = request.form.get("month_year", "").strip()
-        report.outpatients = request.form.get("outpatients", 0, type=int)
-        report.admissions = request.form.get("admissions", 0, type=int)
-        report.deliveries = request.form.get("deliveries", 0, type=int)
-        report.deaths = request.form.get("deaths", 0, type=int)
-        report.notes = request.form.get("notes", "").strip()
 
         if not all([report.hospital_name, report.district, report.month_year]):
             flash("Hospital name, district, and month/year are required.", "danger")
             return redirect(url_for("admin_report_edit", report_id=report.id))
+
+        def fi(name):
+            return request.form.get(name, 0, type=int)
+
+        report.op_new_male=fi("op_new_male"); report.op_new_female=fi("op_new_female")
+        report.op_new_male_child=fi("op_new_male_child"); report.op_new_female_child=fi("op_new_female_child")
+        report.op_old_male=fi("op_old_male"); report.op_old_female=fi("op_old_female")
+        report.op_old_male_child=fi("op_old_male_child"); report.op_old_female_child=fi("op_old_female_child")
+        report.op_emer_male=fi("op_emer_male"); report.op_emer_female=fi("op_emer_female")
+        report.op_emer_male_child=fi("op_emer_male_child"); report.op_emer_female_child=fi("op_emer_female_child")
+        report.adm_male=fi("adm_male"); report.adm_female=fi("adm_female")
+        report.adm_male_child=fi("adm_male_child"); report.adm_female_child=fi("adm_female_child")
+        report.adm_emer_male=fi("adm_emer_male"); report.adm_emer_female=fi("adm_emer_female")
+        report.adm_emer_male_child=fi("adm_emer_male_child"); report.adm_emer_female_child=fi("adm_emer_female_child")
+        report.mlc_male=fi("mlc_male"); report.mlc_female=fi("mlc_female")
+        report.mlc_male_child=fi("mlc_male_child"); report.mlc_female_child=fi("mlc_female_child")
+        report.sdd_male=fi("sdd_male"); report.sdd_female=fi("sdd_female")
+        report.sdd_male_child=fi("sdd_male_child"); report.sdd_female_child=fi("sdd_female_child")
+        report.tubec_male=fi("tubec_male"); report.tubec_female=fi("tubec_female")
+        report.tubec_male_child=fi("tubec_male_child"); report.tubec_female_child=fi("tubec_female_child")
+        report.vasec_male=fi("vasec_male"); report.vasec_female=fi("vasec_female")
+        report.vasec_male_child=fi("vasec_male_child"); report.vasec_female_child=fi("vasec_female_child")
+        report.minor_surg_male=fi("minor_surg_male"); report.minor_surg_female=fi("minor_surg_female")
+        report.minor_surg_male_child=fi("minor_surg_male_child"); report.minor_surg_female_child=fi("minor_surg_female_child")
+        report.major_surg_male=fi("major_surg_male"); report.major_surg_female=fi("major_surg_female")
+        report.major_surg_male_child=fi("major_surg_male_child"); report.major_surg_female_child=fi("major_surg_female_child")
+        report.deaths_male=fi("deaths_male"); report.deaths_female=fi("deaths_female")
+        report.deaths_male_child=fi("deaths_male_child"); report.deaths_female_child=fi("deaths_female_child")
+        report.normal_deliveries=fi("normal_deliveries"); report.caesarean_deliveries=fi("caesarean_deliveries")
+        report.male_children=fi("male_children"); report.female_children=fi("female_children")
+        report.lab_tests=fi("lab_tests"); report.cumulative_inpatient_days=fi("cumulative_inpatient_days")
+        report.user_charges_collection=fi("user_charges_collection"); report.rsby_cases=fi("rsby_cases")
+        report.notes = request.form.get("notes", "").strip()
 
         db.session.commit()
         flash("Report updated successfully.", "success")
@@ -506,40 +827,46 @@ def admin_report_delete(report_id):
 @admin_required
 def admin_reports_export():
     reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
-
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "id",
-        "hospital_name",
-        "district",
-        "month_year",
-        "owner_username",
-        "owner_email",
-        "outpatients",
-        "admissions",
-        "deliveries",
-        "deaths",
-        "notes",
-        "created_at",
+        "id", "hospital_name", "district", "month_year", "owner_username", "owner_email",
+        "op_new_male", "op_new_female", "op_new_male_child", "op_new_female_child",
+        "op_old_male", "op_old_female", "op_old_male_child", "op_old_female_child",
+        "op_emer_male", "op_emer_female", "op_emer_male_child", "op_emer_female_child",
+        "adm_male", "adm_female", "adm_male_child", "adm_female_child",
+        "adm_emer_male", "adm_emer_female", "adm_emer_male_child", "adm_emer_female_child",
+        "mlc_male", "mlc_female", "mlc_male_child", "mlc_female_child",
+        "sdd_male", "sdd_female", "sdd_male_child", "sdd_female_child",
+        "tubec_male", "tubec_female", "tubec_male_child", "tubec_female_child",
+        "vasec_male", "vasec_female", "vasec_male_child", "vasec_female_child",
+        "minor_surg_male", "minor_surg_female", "minor_surg_male_child", "minor_surg_female_child",
+        "major_surg_male", "major_surg_female", "major_surg_male_child", "major_surg_female_child",
+        "deaths_male", "deaths_female", "deaths_male_child", "deaths_female_child",
+        "normal_deliveries", "caesarean_deliveries", "male_children", "female_children",
+        "lab_tests", "cumulative_inpatient_days", "user_charges_collection", "rsby_cases",
+        "notes", "created_at",
     ])
-
-    for report in reports:
+    for r in reports:
         writer.writerow([
-            report.id,
-            report.hospital_name,
-            report.district,
-            report.month_year,
-            report.owner.username,
-            report.owner.email,
-            report.outpatients,
-            report.admissions,
-            report.deliveries,
-            report.deaths,
-            report.notes,
-            report.created_at.isoformat(),
+            r.id, r.hospital_name, r.district, r.month_year,
+            r.owner.username, r.owner.email,
+            r.op_new_male, r.op_new_female, r.op_new_male_child, r.op_new_female_child,
+            r.op_old_male, r.op_old_female, r.op_old_male_child, r.op_old_female_child,
+            r.op_emer_male, r.op_emer_female, r.op_emer_male_child, r.op_emer_female_child,
+            r.adm_male, r.adm_female, r.adm_male_child, r.adm_female_child,
+            r.adm_emer_male, r.adm_emer_female, r.adm_emer_male_child, r.adm_emer_female_child,
+            r.mlc_male, r.mlc_female, r.mlc_male_child, r.mlc_female_child,
+            r.sdd_male, r.sdd_female, r.sdd_male_child, r.sdd_female_child,
+            r.tubec_male, r.tubec_female, r.tubec_male_child, r.tubec_female_child,
+            r.vasec_male, r.vasec_female, r.vasec_male_child, r.vasec_female_child,
+            r.minor_surg_male, r.minor_surg_female, r.minor_surg_male_child, r.minor_surg_female_child,
+            r.major_surg_male, r.major_surg_female, r.major_surg_male_child, r.major_surg_female_child,
+            r.deaths_male, r.deaths_female, r.deaths_male_child, r.deaths_female_child,
+            r.normal_deliveries, r.caesarean_deliveries, r.male_children, r.female_children,
+            r.lab_tests, r.cumulative_inpatient_days, r.user_charges_collection, r.rsby_cases,
+            r.notes, r.created_at.isoformat(),
         ])
-
     response = make_response(output.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     response.headers["Content-Disposition"] = "attachment; filename=hospital_reports.csv"
@@ -555,6 +882,17 @@ def admin_logout():
 
 def initialize_database() -> None:
     with app.app_context():
+        # Migrate hospital_report table if schema is outdated
+        try:
+            result = db.session.execute(text("PRAGMA table_info(hospital_report)")).fetchall()
+            if result:
+                existing_cols = {row[1] for row in result}
+                if "op_new_male" not in existing_cols:
+                    db.session.execute(text("DROP TABLE hospital_report"))
+                    db.session.commit()
+        except Exception:
+            db.session.rollback()
+
         db.create_all()
 
         # Lightweight migration for existing SQLite DBs created before is_active existed.

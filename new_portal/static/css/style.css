@@ -254,6 +254,83 @@ textarea:focus {
   background: #fee2e2;
 }
 
+/* ── HP Indicator Report Table ── */
+.report-table-wrapper {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  min-width: 680px;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid #d4a792;
+  padding: 0.35rem 0.5rem;
+  vertical-align: middle;
+}
+
+.report-table th {
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.report-table td.indicator {
+  font-weight: 500;
+  min-width: 200px;
+  max-width: 240px;
+}
+
+.report-table td.indicator.bold,
+.report-table td .bold {
+  font-weight: 700;
+}
+
+.report-table td.single-val {
+  text-align: center;
+}
+
+.report-table td.tot {
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.report-table tr.row-total td {
+  background: #fff3e0;
+  font-weight: 700;
+}
+
+.report-table input[type="number"] {
+  width: 68px;
+  border: 1px solid #d6d3d1;
+  border-radius: 6px;
+  padding: 0.2rem 0.3rem;
+  text-align: center;
+  font-size: 0.82rem;
+  background: #fff;
+  outline: none;
+}
+
+.report-table input[type="number"]:focus {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15);
+}
+
+.report-table input.computed {
+  background: #f5f0e8;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: default;
+}
+
 @media (max-width: 640px) {
   .topbar {
     flex-direction: column;
