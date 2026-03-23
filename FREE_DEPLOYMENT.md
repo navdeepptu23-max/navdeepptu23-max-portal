@@ -25,7 +25,7 @@ git commit -m "Initial portal commit"
 git branch -M main
 
 # Create repo on GitHub.com first, then:
-git remote add origin https://github.com/YOUR-USERNAME/portal.git
+git remote add origin https://github.com/navdeepptu23-max/portal.git
 git push -u origin main
 ```
 

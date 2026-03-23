@@ -41,7 +41,7 @@ git --version
    - **Description:** "Modern community portal with Flask"
    - **Public** (so Render can access it)
 3. Click **Create repository**
-4. Copy the repository URL (looks like: `https://github.com/YOUR-USERNAME/portal.git`)
+4. Copy the repository URL (looks like: `https://github.com/navdeepptu23-max/portal.git`)
 
 ---
 
@@ -62,7 +62,7 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 
 # Add remote (replace with YOUR repository URL from Step 2)
-git remote add origin https://github.com/YOUR-USERNAME/portal.git
+git remote add origin https://github.com/navdeepptu23-max/portal.git
 git branch -M main
 
 # Push to GitHub

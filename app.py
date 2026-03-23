@@ -678,15 +678,15 @@ def create_database():
     with app.app_context():
         try:
             db.create_all()
-            print("✓ Database tables created successfully")
+            print("[OK] Database tables created successfully")
             return True
         except Exception as e:
-            print(f"✗ Database creation error: {e}")
+            print(f"[ERROR] Database creation error: {e}")
             return False
 
 
 # Initialize database immediately when module loads
-print("🔄 Initializing database on app startup...")
+print("[INIT] Initializing database on app startup...")
 create_database()
 
 
