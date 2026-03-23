@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Admin CBHI Form-1 Report | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Admin - CBHI Form-1 Report #{{ report.id }}</h2>
+  <p><strong>Health Establishment:</strong> {{ report.health_establishment_name }} &nbsp;|&nbsp; <strong>Month:</strong> {{ report.month }} &nbsp;|&nbsp; <strong>Year:</strong> {{ report.year }}</p>
+  <p><strong>Submitted by:</strong> {{ report.cbhi_owner.username }} ({{ report.cbhi_owner.email }})</p>
+  <div class="cta-row">
+    <a class="btn ghost" href="{{ url_for('admin_dashboard') }}">&larr; Dashboard</a>
+    <a class="btn ghost" href="{{ url_for('admin_cbhi_report_edit', report_id=report.id) }}">Edit Report</a>
+    <form class="inline-form" method="post" action="{{ url_for('admin_cbhi_report_delete', report_id=report.id) }}" onsubmit="return confirm('Delete this CBHI report?');">
+      <button class="btn danger" type="submit">Delete Report</button>
+    </form>
+  </div>
+
+  <div class="report-table-wrapper cbhi-wrapper">
+    <table class="report-table cbhi-table cbhi-view-table">
+      <thead>
+        <tr>
+          <th rowspan="2" class="sticky-col">Sr. No.</th>
+          <th rowspan="2" class="sticky-col-2">Name of Disease and ICD Code</th>
+          <th colspan="4">General OPD Cases (B)</th>
+          <th colspan="4">Emergency OPD Cases (C)</th>
+          <th colspan="4">IPD Referred from General OPD Cases (D)</th>
+          <th colspan="4">IPD Referred from Emergency OPD Cases (E)</th>
+          <th colspan="4">Overall Cases Reported (F)</th>
+          <th colspan="4">General Deaths Reported (G)</th>
+          <th rowspan="2">Remarks (H)</th>
+        </tr>
+        <tr>
+          {% for _ in range(5) %}
+            <th>M</th><th>F</th><th>Tr</th><th>Total</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td class="single-val sticky-col">{{ row.sr_no }}</td>
+            <td class="indicator sticky-col-2"><strong>{{ row.disease_name }}</strong><br><small>{{ row.icd_code }}</small></td>
+            <td>{{ row.general_opd_m }}</td><td>{{ row.general_opd_f }}</td><td>{{ row.general_opd_tr }}</td><td class="tot">{{ row.general_opd_total }}</td>
+            <td>{{ row.emergency_opd_m }}</td><td>{{ row.emergency_opd_f }}</td><td>{{ row.emergency_opd_tr }}</td><td class="tot">{{ row.emergency_opd_total }}</td>
+            <td>{{ row.ipd_general_m }}</td><td>{{ row.ipd_general_f }}</td><td>{{ row.ipd_general_tr }}</td><td class="tot">{{ row.ipd_general_total }}</td>
+            <td>{{ row.ipd_emergency_m }}</td><td>{{ row.ipd_emergency_f }}</td><td>{{ row.ipd_emergency_tr }}</td><td class="tot">{{ row.ipd_emergency_total }}</td>
+            <td>{{ row.overall_m }}</td><td>{{ row.overall_f }}</td><td>{{ row.overall_tr }}</td><td class="tot">{{ row.overall_total }}</td>
+            <td>{{ row.general_deaths_m }}</td><td>{{ row.general_deaths_f }}</td><td>{{ row.general_deaths_tr }}</td><td class="tot">{{ row.general_deaths_total }}</td>
+            <td>{{ row.remarks }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="row-total">
+          <td class="sticky-col"></td>
+          <td class="sticky-col-2">TOTAL</td>
+          <td>{{ totals.general_opd_m }}</td><td>{{ totals.general_opd_f }}</td><td>{{ totals.general_opd_tr }}</td><td>{{ totals.general_opd_total }}</td>
+          <td>{{ totals.emergency_opd_m }}</td><td>{{ totals.emergency_opd_f }}</td><td>{{ totals.emergency_opd_tr }}</td><td>{{ totals.emergency_opd_total }}</td>
+          <td>{{ totals.ipd_general_m }}</td><td>{{ totals.ipd_general_f }}</td><td>{{ totals.ipd_general_tr }}</td><td>{{ totals.ipd_general_total }}</td>
+          <td>{{ totals.ipd_emergency_m }}</td><td>{{ totals.ipd_emergency_f }}</td><td>{{ totals.ipd_emergency_tr }}</td><td>{{ totals.ipd_emergency_total }}</td>
+          <td>{{ totals.overall_m }}</td><td>{{ totals.overall_f }}</td><td>{{ totals.overall_tr }}</td><td>{{ totals.overall_total }}</td>
+          <td>{{ totals.general_deaths_m }}</td><td>{{ totals.general_deaths_f }}</td><td>{{ totals.general_deaths_tr }}</td><td>{{ totals.general_deaths_total }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+{% endblock %}

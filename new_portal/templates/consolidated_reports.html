@@ -5,17 +5,28 @@
   <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
     <div>
       <h2>{{ title }}</h2>
-      <p>Combined view of HP Indicator and Morbidity reports.</p>
+      <p>Combined view of HP Indicator, Morbidity, CBHI Form-1, and CBHI Form-2 reports.</p>
+      <form method="get" style="display:flex;gap:.5rem;align-items:end;flex-wrap:wrap;margin-top:.5rem;">
+        <label style="display:flex;flex-direction:column;gap:.2rem;">
+          Module
+          <select name="module">
+            {% for key, label in module_options.items() %}
+              <option value="{{ key }}" {% if key == selected_module %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button class="btn ghost" type="submit">Apply Filter</button>
+      </form>
     </div>
     <div class="cta-row" style="flex-wrap:wrap;">
       {% if show_owner %}
-        <a class="btn primary" href="{{ url_for('admin_consolidated_reports_excel') }}">&#11015; Excel</a>
-        <a class="btn ghost" href="{{ url_for('admin_consolidated_reports_csv') }}">&#11015; CSV</a>
-        <a class="btn ghost" href="{{ url_for('admin_consolidated_reports_print') }}" target="_blank">&#128438; Print / PDF</a>
+        <a class="btn primary" href="{{ url_for('admin_consolidated_reports_excel', module=selected_module) }}">&#11015; Excel</a>
+        <a class="btn ghost" href="{{ url_for('admin_consolidated_reports_csv', module=selected_module) }}">&#11015; CSV</a>
+        <a class="btn ghost" href="{{ url_for('admin_consolidated_reports_print', module=selected_module) }}" target="_blank">&#128438; Print / PDF</a>
       {% else %}
-        <a class="btn primary" href="{{ url_for('consolidated_reports_excel') }}">&#11015; Excel</a>
-        <a class="btn ghost" href="{{ url_for('consolidated_reports_csv') }}">&#11015; CSV</a>
-        <a class="btn ghost" href="{{ url_for('consolidated_reports_print') }}" target="_blank">&#128438; Print / PDF</a>
+        <a class="btn primary" href="{{ url_for('consolidated_reports_excel', module=selected_module) }}">&#11015; Excel</a>
+        <a class="btn ghost" href="{{ url_for('consolidated_reports_csv', module=selected_module) }}">&#11015; CSV</a>
+        <a class="btn ghost" href="{{ url_for('consolidated_reports_print', module=selected_module) }}" target="_blank">&#128438; Print / PDF</a>
       {% endif %}
     </div>
   </div>

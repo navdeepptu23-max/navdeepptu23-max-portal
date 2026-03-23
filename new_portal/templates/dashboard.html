@@ -3,12 +3,16 @@
 {% block content %}
 <section class="card">
   <h2>Welcome, {{ user.username }}</h2>
-  <p>Your account is active. Submit and review both monthly HP indicator reports and morbidity/mortality reports here.</p>
+  <p>Your account is active. Submit and review HP indicator, morbidity, CBHI Form-1, and CBHI Form-2 reports here.</p>
   <div class="cta-row">
     <a class="btn primary" href="{{ url_for('new_hospital_report') }}">New HP Report</a>
     <a class="btn ghost" href="{{ url_for('hospital_reports') }}">HP Reports</a>
     <a class="btn primary" href="{{ url_for('new_morbidity_report') }}">New Morbidity Report</a>
     <a class="btn ghost" href="{{ url_for('morbidity_reports') }}">Morbidity Reports</a>
+    <a class="btn primary" href="{{ url_for('new_cbhi_report') }}">New CBHI Form-1</a>
+    <a class="btn ghost" href="{{ url_for('cbhi_reports') }}">CBHI Form-1 Reports</a>
+    <a class="btn primary" href="{{ url_for('new_ncd_report') }}">New CBHI Form-2</a>
+    <a class="btn ghost" href="{{ url_for('ncd_reports') }}">CBHI Form-2 Reports</a>
     <a class="btn ghost" href="{{ url_for('consolidated_reports') }}">Consolidated Reports</a>
   </div>
   <div class="stats">
@@ -23,6 +27,14 @@
     <article>
       <h3>Morbidity Reports</h3>
       <p>{{ morbidity_reports|length }}</p>
+    </article>
+    <article>
+      <h3>CBHI Reports</h3>
+      <p>{{ cbhi_reports|length }}</p>
+    </article>
+    <article>
+      <h3>CBHI Form-2 Reports</h3>
+      <p>{{ ncd_reports|length }}</p>
     </article>
   </div>
 
@@ -70,6 +82,62 @@
             <td>{{ item.total_opd }}</td>
             <td>{{ item.total_ipd }}</td>
             <td><a href="{{ url_for('morbidity_report_view', report_id=item.report.id) }}">Open</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if cbhi_reports %}
+    <h3 class="section-title">Latest CBHI Form-1 Reports</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Health Establishment</th>
+          <th>Month</th>
+          <th>Year</th>
+          <th>Overall Cases</th>
+          <th>Deaths</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cbhi_summaries %}
+          <tr>
+            <td>{{ item.report.health_establishment_name }}</td>
+            <td>{{ item.report.month }}</td>
+            <td>{{ item.report.year }}</td>
+            <td>{{ item.overall_total }}</td>
+            <td>{{ item.deaths_total }}</td>
+            <td><a href="{{ url_for('cbhi_report_view', report_id=item.report.id) }}">Open</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if ncd_reports %}
+    <h3 class="section-title">Latest CBHI Form-2 Reports</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Health Establishment</th>
+          <th>Month</th>
+          <th>Year</th>
+          <th>Overall Cases</th>
+          <th>Deaths</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in ncd_summaries %}
+          <tr>
+            <td>{{ item.report.health_establishment_name }}</td>
+            <td>{{ item.report.month }}</td>
+            <td>{{ item.report.year }}</td>
+            <td>{{ item.overall_total }}</td>
+            <td>{{ item.deaths_total }}</td>
+            <td><a href="{{ url_for('ncd_report_view', report_id=item.report.id) }}">Open</a></td>
           </tr>
         {% endfor %}
       </tbody>

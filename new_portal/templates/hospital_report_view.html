@@ -32,6 +32,7 @@
       <p style="margin:0;color:var(--muted);">District: <strong>{{ report.district }}</strong> &nbsp;|&nbsp; Submitted: {{ report.created_at.strftime('%d %b %Y') }}</p>
     </div>
     <div class="cta-row" style="flex-wrap:wrap;">
+      <a class="btn ghost" href="{{ url_for('hospital_report_edit', report_id=report.id) }}">Edit</a>
       <a class="btn primary" href="{{ url_for('hospital_report_excel', report_id=report.id) }}">&#11015; Excel</a>
       <a class="btn ghost" href="{{ url_for('hospital_report_csv', report_id=report.id) }}">&#11015; CSV</a>
       <a class="btn ghost" href="{{ url_for('hospital_report_print', report_id=report.id) }}" target="_blank">&#128438; Print / PDF</a>

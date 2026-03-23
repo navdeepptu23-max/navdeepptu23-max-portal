@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CBHI Form-1 Report</title>
+  <style>
+    @page { size: landscape; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; padding: 0.5cm; color: #000; }
+    .actions { text-align: center; margin-bottom: 10px; }
+    .actions button, .actions a { display: inline-block; padding: 8px 14px; text-decoration: none; background: #444; color: #fff; border: none; border-radius: 4px; margin: 0 4px; }
+    h1, h2, p { text-align: center; margin: 0; }
+    h1 { font-size: 12pt; }
+    h2 { font-size: 10pt; margin-top: 4px; }
+    .meta { margin-top: 6px; font-size: 9pt; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 7pt; }
+    th, td { border: 1px solid #555; padding: 2px 3px; text-align: center; vertical-align: middle; }
+    th { background: #d9d9d9; }
+    td.label { text-align: left; min-width: 180px; }
+    tr.total td { background: #efefef; font-weight: bold; }
+    .approval { margin-top: 10px; font-size: 8pt; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 20px; }
+    @media print { .actions { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <button onclick="window.print()">Print / Save as PDF</button>
+    <a href="javascript:history.back()">Back</a>
+  </div>
+  <h1>CENTRAL BUREAU OF HEALTH INTELLIGENCE (CBHI) - ANNEXURE-B (FORM-1)</h1>
+  <h2>MONTHLY REPORT ON INSTITUTIONAL CASES AND DEATHS IN THE REPORTING UNIT DUE TO COMMUNICABLE DISEASES</h2>
+  <p class="meta">Month: <strong>{{ report.month }}</strong> &nbsp; Year: <strong>{{ report.year }}</strong> &nbsp; Name of Health Establishment: <strong>{{ report.health_establishment_name }}</strong></p>
+  <p class="meta">Address / Phone: <strong>{{ report.postal_address_phone }}</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th rowspan="2">Sr. No.</th>
+        <th rowspan="2">Name of Disease and ICD Code</th>
+        <th colspan="4">General OPD</th>
+        <th colspan="4">Emergency OPD</th>
+        <th colspan="4">IPD from General</th>
+        <th colspan="4">IPD from Emergency</th>
+        <th colspan="4">Overall</th>
+        <th colspan="4">Deaths</th>
+        <th rowspan="2">Remarks</th>
+      </tr>
+      <tr>
+        {% for _ in range(5) %}
+          <th>M</th><th>F</th><th>Tr</th><th>T</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td>{{ row.sr_no }}</td>
+          <td class="label">{{ row.disease_name }} ({{ row.icd_code }})</td>
+          <td>{{ row.general_opd_m }}</td><td>{{ row.general_opd_f }}</td><td>{{ row.general_opd_tr }}</td><td>{{ row.general_opd_total }}</td>
+          <td>{{ row.emergency_opd_m }}</td><td>{{ row.emergency_opd_f }}</td><td>{{ row.emergency_opd_tr }}</td><td>{{ row.emergency_opd_total }}</td>
+          <td>{{ row.ipd_general_m }}</td><td>{{ row.ipd_general_f }}</td><td>{{ row.ipd_general_tr }}</td><td>{{ row.ipd_general_total }}</td>
+          <td>{{ row.ipd_emergency_m }}</td><td>{{ row.ipd_emergency_f }}</td><td>{{ row.ipd_emergency_tr }}</td><td>{{ row.ipd_emergency_total }}</td>
+          <td>{{ row.overall_m }}</td><td>{{ row.overall_f }}</td><td>{{ row.overall_tr }}</td><td>{{ row.overall_total }}</td>
+          <td>{{ row.general_deaths_m }}</td><td>{{ row.general_deaths_f }}</td><td>{{ row.general_deaths_tr }}</td><td>{{ row.general_deaths_total }}</td>
+          <td>{{ row.remarks }}</td>
+        </tr>
+      {% endfor %}
+      <tr class="total">
+        <td></td>
+        <td class="label">TOTAL</td>
+        <td>{{ totals.general_opd_m }}</td><td>{{ totals.general_opd_f }}</td><td>{{ totals.general_opd_tr }}</td><td>{{ totals.general_opd_total }}</td>
+        <td>{{ totals.emergency_opd_m }}</td><td>{{ totals.emergency_opd_f }}</td><td>{{ totals.emergency_opd_tr }}</td><td>{{ totals.emergency_opd_total }}</td>
+        <td>{{ totals.ipd_general_m }}</td><td>{{ totals.ipd_general_f }}</td><td>{{ totals.ipd_general_tr }}</td><td>{{ totals.ipd_general_total }}</td>
+        <td>{{ totals.ipd_emergency_m }}</td><td>{{ totals.ipd_emergency_f }}</td><td>{{ totals.ipd_emergency_tr }}</td><td>{{ totals.ipd_emergency_total }}</td>
+        <td>{{ totals.overall_m }}</td><td>{{ totals.overall_f }}</td><td>{{ totals.overall_tr }}</td><td>{{ totals.overall_total }}</td>
+        <td>{{ totals.general_deaths_m }}</td><td>{{ totals.general_deaths_f }}</td><td>{{ totals.general_deaths_tr }}</td><td>{{ totals.general_deaths_total }}</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="approval">
+    <div><strong>Name of Approving Authority:</strong> {{ report.approving_authority_name or '-' }}</div>
+    <div><strong>Designation:</strong> {{ report.approving_authority_designation or '-' }}</div>
+    <div><strong>Official Email ID:</strong> {{ report.official_email or '-' }}</div>
+    <div><strong>Official Phone Number:</strong> {{ report.official_phone or '-' }}</div>
+  </div>
+</body>
+</html>

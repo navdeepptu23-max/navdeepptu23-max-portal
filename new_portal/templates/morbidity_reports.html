@@ -14,7 +14,7 @@
           <th>Institution</th>
           <th>Month</th>
           <th>Created</th>
-          <th>View</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -23,7 +23,11 @@
             <td>{{ report.health_institution_name }}</td>
             <td>{{ report.month_year }}</td>
             <td>{{ report.created_at.strftime('%d %b %Y') }}</td>
-            <td><a href="{{ url_for('morbidity_report_view', report_id=report.id) }}">Open</a></td>
+            <td>
+              <a href="{{ url_for('morbidity_report_view', report_id=report.id) }}">Open</a>
+              <span class="action-sep">|</span>
+              <a href="{{ url_for('morbidity_report_edit', report_id=report.id) }}">Edit</a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>

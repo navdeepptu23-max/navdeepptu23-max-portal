@@ -7,10 +7,21 @@
   <div class="cta-row">
     <a class="btn primary" href="{{ url_for('admin_reports_export') }}">Export CSV</a>
     <a class="btn ghost" href="{{ url_for('admin_morbidity_reports_export') }}">Export Morbidity CSV</a>
+    <a class="btn ghost" href="{{ url_for('admin_cbhi_reports_export') }}">Export CBHI CSV</a>
+    <a class="btn ghost" href="{{ url_for('admin_ncd_reports_export') }}">Export CBHI Form-2 CSV</a>
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports') }}">Consolidated Reports</a>
     <a class="btn ghost" href="{{ url_for('admin_user_create') }}">Create Login ID</a>
     <a class="btn ghost" href="{{ url_for('admin_users') }}">Manage Users</a>
     <a class="btn ghost" href="{{ url_for('admin_logout') }}">Admin Logout</a>
+  </div>
+
+  <h3 class="section-title">Consolidated Module Views</h3>
+  <div class="cta-row">
+    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='all') }}">All Modules</a>
+    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='hp') }}">HP Indicator</a>
+    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='morbidity') }}">Morbidity</a>
+    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='cbhi1') }}">CBHI Form-1</a>
+    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='cbhi2') }}">CBHI Form-2</a>
   </div>
 
   <div class="stats">
@@ -29,6 +40,14 @@
     <article>
       <h3>Morbidity Reports</h3>
       <p>{{ stats.total_morbidity_reports }}</p>
+    </article>
+    <article>
+      <h3>CBHI Reports</h3>
+      <p>{{ stats.total_cbhi_reports }}</p>
+    </article>
+    <article>
+      <h3>CBHI Form-2 Reports</h3>
+      <p>{{ stats.total_ncd_reports }}</p>
     </article>
     <article>
       <h3>Total Outpatients</h3>
@@ -100,6 +119,82 @@
     </table>
   {% else %}
     <p>No morbidity reports submitted yet.</p>
+  {% endif %}
+
+  <h3 class="section-title">Recent CBHI Form-1 Reports</h3>
+  {% if cbhi_reports %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Establishment</th>
+          <th>Owner</th>
+          <th>Month / Year</th>
+          <th>Overall Cases</th>
+          <th>Deaths</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cbhi_summaries %}
+          <tr>
+            <td>{{ item.report.health_establishment_name }}</td>
+            <td>{{ item.report.cbhi_owner.username }}</td>
+            <td>{{ item.report.month }} {{ item.report.year }}</td>
+            <td>{{ item.overall_total }}</td>
+            <td>{{ item.deaths_total }}</td>
+            <td>
+              <a href="{{ url_for('admin_cbhi_report_view', report_id=item.report.id) }}">Open</a>
+              <span class="action-sep">|</span>
+              <a href="{{ url_for('admin_cbhi_report_edit', report_id=item.report.id) }}">Edit</a>
+              <span class="action-sep">|</span>
+              <form class="inline-form" method="post" action="{{ url_for('admin_cbhi_report_delete', report_id=item.report.id) }}" onsubmit="return confirm('Delete this CBHI report?');">
+                <button class="link-btn danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No CBHI Form-1 reports submitted yet.</p>
+  {% endif %}
+
+  <h3 class="section-title">Recent CBHI Form-2 Reports</h3>
+  {% if ncd_reports %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Establishment</th>
+          <th>Owner</th>
+          <th>Month / Year</th>
+          <th>Overall Cases</th>
+          <th>Deaths</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in ncd_summaries %}
+          <tr>
+            <td>{{ item.report.health_establishment_name }}</td>
+            <td>{{ item.report.ncd_owner.username }}</td>
+            <td>{{ item.report.month }} {{ item.report.year }}</td>
+            <td>{{ item.overall_total }}</td>
+            <td>{{ item.deaths_total }}</td>
+            <td>
+              <a href="{{ url_for('admin_ncd_report_view', report_id=item.report.id) }}">Open</a>
+              <span class="action-sep">|</span>
+              <a href="{{ url_for('admin_ncd_report_edit', report_id=item.report.id) }}">Edit</a>
+              <span class="action-sep">|</span>
+              <form class="inline-form" method="post" action="{{ url_for('admin_ncd_report_delete', report_id=item.report.id) }}" onsubmit="return confirm('Delete this CBHI Form-2 report?');">
+                <button class="link-btn danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No CBHI Form-2 reports submitted yet.</p>
   {% endif %}
 </section>
 {% endblock %}

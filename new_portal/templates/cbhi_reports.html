@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}My CBHI Form-1 Reports | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>My CBHI Form-1 Reports</h2>
+  <div class="cta-row">
+    <a class="btn primary" href="{{ url_for('new_cbhi_report') }}">Add CBHI Form-1 Report</a>
+  </div>
+
+  {% if reports %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Health Establishment</th>
+          <th>Month</th>
+          <th>Year</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+          <tr>
+            <td>{{ report.health_establishment_name }}</td>
+            <td>{{ report.month }}</td>
+            <td>{{ report.year }}</td>
+            <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <a href="{{ url_for('cbhi_report_view', report_id=report.id) }}">Open</a>
+              <span class="action-sep">|</span>
+              <a href="{{ url_for('cbhi_report_edit', report_id=report.id) }}">Edit</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No CBHI Form-1 reports yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

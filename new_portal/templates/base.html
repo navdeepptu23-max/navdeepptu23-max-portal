@@ -14,9 +14,13 @@
         <a href="{{ url_for('dashboard') }}">Dashboard</a>
         <a href="{{ url_for('hospital_reports') }}">HP Reports</a>
         <a href="{{ url_for('morbidity_reports') }}">Morbidity Reports</a>
+        <a href="{{ url_for('cbhi_reports') }}">CBHI Form-1</a>
+        <a href="{{ url_for('ncd_reports') }}">CBHI Form-2</a>
         <a href="{{ url_for('consolidated_reports') }}">Consolidated</a>
         <a href="{{ url_for('new_hospital_report') }}">New HP Report</a>
         <a href="{{ url_for('new_morbidity_report') }}">New Morbidity Report</a>
+        <a href="{{ url_for('new_cbhi_report') }}">New CBHI Form-1</a>
+        <a href="{{ url_for('new_ncd_report') }}">New CBHI Form-2</a>
         <a href="{{ url_for('logout') }}">Logout</a>
       {% else %}
         <a href="{{ url_for('login') }}">Login</a>

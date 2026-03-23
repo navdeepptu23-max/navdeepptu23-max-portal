@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block title %}New CBHI Form-2 Report | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  {% set is_edit = report is defined and report %}
+  <div class="cbhi-header-block">
+    <div class="cbhi-headline-row">
+      <span>CENTRAL BUREAU OF HEALTH INTELLIGENCE (CBHI)</span>
+      <span>ANNEXURE-C</span>
+      <span>(FORM-2)</span>
+    </div>
+    <h2>Monthly Report on Institutional Cases and Deaths in the Reporting Unit Due to Non-Communicable Diseases</h2>
+  </div>
+
+  <form method="post" id="ncdForm" action="{{ form_action if form_action is defined else '' }}">
+    <div class="form-grid form-grid-2 cbhi-meta-grid">
+      <label>Month
+        <input type="text" name="month" placeholder="JAN" value="{{ report.month if is_edit else '' }}" required />
+      </label>
+      <label>Year
+        <input type="text" name="year" placeholder="2026" value="{{ report.year if is_edit else '' }}" required />
+      </label>
+      <label>Name of Health Establishment
+        <input type="text" name="health_establishment_name" value="{{ report.health_establishment_name if is_edit else '' }}" required />
+      </label>
+      <label>Complete Postal Address and Office Phone Number
+        <textarea name="postal_address_phone" rows="2" required>{{ report.postal_address_phone if is_edit else '' }}</textarea>
+      </label>
+    </div>
+
+    <div class="report-table-wrapper cbhi-wrapper">
+      <table class="report-table cbhi-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="sticky-col">Sr. No.</th>
+            <th rowspan="2" class="sticky-col-2">Name of Disease and ICD Code</th>
+            <th colspan="4">General OPD Cases (B)</th>
+            <th colspan="4">Emergency OPD Cases (C)</th>
+            <th colspan="4">IPD Referred from General OPD Cases (D)</th>
+            <th colspan="4">IPD Referred from Emergency OPD Cases (E)</th>
+            <th colspan="4">Overall Cases Reported (F)</th>
+            <th colspan="4">General Deaths Reported (G)</th>
+            <th rowspan="2">Remarks (H)</th>
+          </tr>
+          <tr>
+            {% for _ in range(5) %}
+              <th>M</th>
+              <th>F</th>
+              <th>Tr</th>
+              <th>Total</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for sr_no, disease_name, icd_code in diseases %}
+            <tr>
+              <td class="single-val sticky-col">{{ sr_no }}</td>
+              <td class="indicator sticky-col-2"><strong>{{ disease_name }}</strong><br><small>{{ icd_code }}</small></td>
+
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_general_opd_m" id="ncd_{{ sr_no }}_general_opd_m" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_general_opd_f" id="ncd_{{ sr_no }}_general_opd_f" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_general_opd_tr" id="ncd_{{ sr_no }}_general_opd_tr" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_general_opd_total" value="0" readonly /></td>
+
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_emergency_opd_m" id="ncd_{{ sr_no }}_emergency_opd_m" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_emergency_opd_f" id="ncd_{{ sr_no }}_emergency_opd_f" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_emergency_opd_tr" id="ncd_{{ sr_no }}_emergency_opd_tr" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_emergency_opd_total" value="0" readonly /></td>
+
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_ipd_general_m" id="ncd_{{ sr_no }}_ipd_general_m" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_ipd_general_f" id="ncd_{{ sr_no }}_ipd_general_f" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_ipd_general_tr" id="ncd_{{ sr_no }}_ipd_general_tr" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_ipd_general_total" value="0" readonly /></td>
+
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_ipd_emergency_m" id="ncd_{{ sr_no }}_ipd_emergency_m" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_ipd_emergency_f" id="ncd_{{ sr_no }}_ipd_emergency_f" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_ipd_emergency_tr" id="ncd_{{ sr_no }}_ipd_emergency_tr" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_ipd_emergency_total" value="0" readonly /></td>
+
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_overall_m" value="0" readonly /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_overall_f" value="0" readonly /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_overall_tr" value="0" readonly /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_overall_total" value="0" readonly /></td>
+
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_general_deaths_m" id="ncd_{{ sr_no }}_general_deaths_m" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_general_deaths_f" id="ncd_{{ sr_no }}_general_deaths_f" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num" type="number" min="0" name="ncd_{{ sr_no }}_general_deaths_tr" id="ncd_{{ sr_no }}_general_deaths_tr" value="0" oninput="calcNcdRow('{{ sr_no }}')" /></td>
+              <td><input class="cbhi-num computed" type="number" id="ncd_{{ sr_no }}_general_deaths_total" value="0" readonly /></td>
+
+              <td><input class="cbhi-remark" type="text" name="ncd_{{ sr_no }}_remarks" /></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr class="row-total">
+            <td class="sticky-col"></td>
+            <td class="sticky-col-2"><strong>TOTAL</strong></td>
+            {% for key in [
+              'general_opd_m','general_opd_f','general_opd_tr','general_opd_total',
+              'emergency_opd_m','emergency_opd_f','emergency_opd_tr','emergency_opd_total',
+              'ipd_general_m','ipd_general_f','ipd_general_tr','ipd_general_total',
+              'ipd_emergency_m','ipd_emergency_f','ipd_emergency_tr','ipd_emergency_total',
+              'overall_m','overall_f','overall_tr','overall_total',
+              'general_deaths_m','general_deaths_f','general_deaths_tr','general_deaths_total'
+            ] %}
+              <td><input class="cbhi-num computed" type="number" id="ncd_total_{{ key }}" value="0" readonly /></td>
+            {% endfor %}
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="form-grid form-grid-2 cbhi-approval-grid">
+      <label>Name of the Approving Authority
+        <input type="text" name="approving_authority_name" value="{{ report.approving_authority_name if is_edit else '' }}" />
+      </label>
+      <label>Designation of the Approving Authority
+        <input type="text" name="approving_authority_designation" value="{{ report.approving_authority_designation if is_edit else '' }}" />
+      </label>
+      <label>Official Email ID
+        <input type="email" name="official_email" value="{{ report.official_email if is_edit else '' }}" />
+      </label>
+      <label>Official Phone Number
+        <input type="text" name="official_phone" value="{{ report.official_phone if is_edit else '' }}" />
+      </label>
+    </div>
+
+    <section class="cbhi-notes">
+      <h3>Notes</h3>
+      <ol>
+        <li>CBHI Official Website may be visited for disease definition and type of health establishment.</li>
+        <li>Submit the original form to the district nodal officer by 20th of the succeeding month.</li>
+        <li>IPD referred from Central OPD cases should be less than or equal to General OPD cases.</li>
+        <li>IPD referred from Emergency OPD cases should be less than or equal to Emergency OPD cases.</li>
+        <li>Use zero for blank numeric fields.</li>
+      </ol>
+    </section>
+
+    <div class="cta-row">
+      <button class="btn primary" type="submit">{{ submit_label if submit_label is defined else 'Submit CBHI Form-2 Report' }}</button>
+      <a class="btn ghost" href="{{ cancel_url if cancel_url is defined else url_for('ncd_reports') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+
+<script id="ncdRowsData" type="application/json">{{ disease_ids|tojson }}</script>
+<script id="ncdInitialPayloadData" type="application/json">{{ (initial_payload if initial_payload is defined else {})|tojson }}</script>
+<script>
+const ncdRows = JSON.parse(document.getElementById('ncdRowsData').textContent || '[]');
+const ncdInitialPayload = JSON.parse(document.getElementById('ncdInitialPayloadData').textContent || '{}');
+const ncdGroups = ['general_opd', 'emergency_opd', 'ipd_general', 'ipd_emergency', 'general_deaths'];
+const ncdParts = ['m', 'f', 'tr'];
+function ncdVal(id) { return parseInt(document.getElementById(id)?.value) || 0; }
+function ncdSet(id, value) { const el = document.getElementById(id); if (el) el.value = value; }
+function calcNcdRow(srNo) {
+  ncdGroups.forEach(group => {
+    const total = ncdParts.reduce((sum, part) => sum + ncdVal(`ncd_${srNo}_${group}_${part}`), 0);
+    ncdSet(`ncd_${srNo}_${group}_total`, total);
+  });
+  ncdSet(`ncd_${srNo}_overall_m`, ncdVal(`ncd_${srNo}_general_opd_m`) + ncdVal(`ncd_${srNo}_emergency_opd_m`));
+  ncdSet(`ncd_${srNo}_overall_f`, ncdVal(`ncd_${srNo}_general_opd_f`) + ncdVal(`ncd_${srNo}_emergency_opd_f`));
+  ncdSet(`ncd_${srNo}_overall_tr`, ncdVal(`ncd_${srNo}_general_opd_tr`) + ncdVal(`ncd_${srNo}_emergency_opd_tr`));
+  ncdSet(`ncd_${srNo}_overall_total`, ncdVal(`ncd_${srNo}_overall_m`) + ncdVal(`ncd_${srNo}_overall_f`) + ncdVal(`ncd_${srNo}_overall_tr`));
+  calcNcdTotals();
+}
+function calcNcdTotals() {
+  const totalKeys = [
+    'general_opd_m','general_opd_f','general_opd_tr','general_opd_total',
+    'emergency_opd_m','emergency_opd_f','emergency_opd_tr','emergency_opd_total',
+    'ipd_general_m','ipd_general_f','ipd_general_tr','ipd_general_total',
+    'ipd_emergency_m','ipd_emergency_f','ipd_emergency_tr','ipd_emergency_total',
+    'overall_m','overall_f','overall_tr','overall_total',
+    'general_deaths_m','general_deaths_f','general_deaths_tr','general_deaths_total'
+  ];
+  totalKeys.forEach(key => {
+    const sum = ncdRows.reduce((acc, srNo) => acc + ncdVal(`ncd_${srNo}_${key}`), 0);
+    ncdSet(`ncd_total_${key}`, sum);
+  });
+}
+window.addEventListener('load', () => {
+  Object.entries(ncdInitialPayload || {}).forEach(([srNo, values]) => {
+    Object.entries(values || {}).forEach(([key, value]) => {
+      if (key === 'remarks') {
+        const remarkInput = document.querySelector(`input[name="ncd_${srNo}_remarks"]`);
+        if (remarkInput) {
+          remarkInput.value = value || '';
+        }
+      } else {
+        const field = document.getElementById(`ncd_${srNo}_${key}`);
+        if (field) {
+          field.value = Number.isFinite(Number(value)) ? Number(value) : 0;
+        }
+      }
+    });
+  });
+  ncdRows.forEach(calcNcdRow);
+});
+</script>
+{% endblock %}

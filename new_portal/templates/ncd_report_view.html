@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}CBHI Form-2 Report | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="cbhi-header-block">
+    <div class="cbhi-headline-row">
+      <span>CENTRAL BUREAU OF HEALTH INTELLIGENCE (CBHI)</span>
+      <span>ANNEXURE-C</span>
+      <span>(FORM-2)</span>
+    </div>
+    <h2>Monthly Report on Institutional Cases and Deaths in the Reporting Unit Due to Non-Communicable Diseases</h2>
+  </div>
+
+  <div class="cbhi-meta-view">
+    <p><strong>Month:</strong> {{ report.month }} &nbsp; <strong>Year:</strong> {{ report.year }}</p>
+    <p><strong>Name of Health Establishment:</strong> {{ report.health_establishment_name }}</p>
+    <p><strong>Address / Phone:</strong> {{ report.postal_address_phone }}</p>
+  </div>
+
+  <div class="cta-row">
+    <a class="btn ghost" href="{{ url_for('ncd_report_edit', report_id=report.id) }}">Edit</a>
+    <a class="btn primary" href="{{ url_for('ncd_report_excel', report_id=report.id) }}">&#11015; Excel</a>
+    <a class="btn ghost" href="{{ url_for('ncd_report_csv', report_id=report.id) }}">&#11015; CSV</a>
+    <a class="btn ghost" href="{{ url_for('ncd_report_print', report_id=report.id) }}" target="_blank">&#128438; Print / PDF</a>
+    <a class="btn ghost" href="{{ url_for('ncd_reports') }}">&larr; Back</a>
+  </div>
+
+  <div class="report-table-wrapper cbhi-wrapper">
+    <table class="report-table cbhi-table cbhi-view-table">
+      <thead>
+        <tr>
+          <th rowspan="2" class="sticky-col">Sr. No.</th>
+          <th rowspan="2" class="sticky-col-2">Name of Disease and ICD Code</th>
+          <th colspan="4">General OPD Cases (B)</th>
+          <th colspan="4">Emergency OPD Cases (C)</th>
+          <th colspan="4">IPD Referred from General OPD Cases (D)</th>
+          <th colspan="4">IPD Referred from Emergency OPD Cases (E)</th>
+          <th colspan="4">Overall Cases Reported (F)</th>
+          <th colspan="4">General Deaths Reported (G)</th>
+          <th rowspan="2">Remarks (H)</th>
+        </tr>
+        <tr>
+          {% for _ in range(5) %}
+            <th>M</th><th>F</th><th>Tr</th><th>Total</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td class="single-val sticky-col">{{ row.sr_no }}</td>
+            <td class="indicator sticky-col-2"><strong>{{ row.disease_name }}</strong><br><small>{{ row.icd_code }}</small></td>
+            <td>{{ row.general_opd_m }}</td><td>{{ row.general_opd_f }}</td><td>{{ row.general_opd_tr }}</td><td class="tot">{{ row.general_opd_total }}</td>
+            <td>{{ row.emergency_opd_m }}</td><td>{{ row.emergency_opd_f }}</td><td>{{ row.emergency_opd_tr }}</td><td class="tot">{{ row.emergency_opd_total }}</td>
+            <td>{{ row.ipd_general_m }}</td><td>{{ row.ipd_general_f }}</td><td>{{ row.ipd_general_tr }}</td><td class="tot">{{ row.ipd_general_total }}</td>
+            <td>{{ row.ipd_emergency_m }}</td><td>{{ row.ipd_emergency_f }}</td><td>{{ row.ipd_emergency_tr }}</td><td class="tot">{{ row.ipd_emergency_total }}</td>
+            <td>{{ row.overall_m }}</td><td>{{ row.overall_f }}</td><td>{{ row.overall_tr }}</td><td class="tot">{{ row.overall_total }}</td>
+            <td>{{ row.general_deaths_m }}</td><td>{{ row.general_deaths_f }}</td><td>{{ row.general_deaths_tr }}</td><td class="tot">{{ row.general_deaths_total }}</td>
+            <td>{{ row.remarks }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="row-total">
+          <td class="sticky-col"></td>
+          <td class="sticky-col-2">TOTAL</td>
+          <td>{{ totals.general_opd_m }}</td><td>{{ totals.general_opd_f }}</td><td>{{ totals.general_opd_tr }}</td><td>{{ totals.general_opd_total }}</td>
+          <td>{{ totals.emergency_opd_m }}</td><td>{{ totals.emergency_opd_f }}</td><td>{{ totals.emergency_opd_tr }}</td><td>{{ totals.emergency_opd_total }}</td>
+          <td>{{ totals.ipd_general_m }}</td><td>{{ totals.ipd_general_f }}</td><td>{{ totals.ipd_general_tr }}</td><td>{{ totals.ipd_general_total }}</td>
+          <td>{{ totals.ipd_emergency_m }}</td><td>{{ totals.ipd_emergency_f }}</td><td>{{ totals.ipd_emergency_tr }}</td><td>{{ totals.ipd_emergency_total }}</td>
+          <td>{{ totals.overall_m }}</td><td>{{ totals.overall_f }}</td><td>{{ totals.overall_tr }}</td><td>{{ totals.overall_total }}</td>
+          <td>{{ totals.general_deaths_m }}</td><td>{{ totals.general_deaths_f }}</td><td>{{ totals.general_deaths_tr }}</td><td>{{ totals.general_deaths_total }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="cbhi-approval-view">
+    <p><strong>Name of Approving Authority:</strong> {{ report.approving_authority_name or '-' }}</p>
+    <p><strong>Designation:</strong> {{ report.approving_authority_designation or '-' }}</p>
+    <p><strong>Official Email ID:</strong> {{ report.official_email or '-' }}</p>
+    <p><strong>Official Phone Number:</strong> {{ report.official_phone or '-' }}</p>
+  </div>
+</section>
+{% endblock %}

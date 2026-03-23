@@ -2,13 +2,14 @@
 {% block title %}New Hospital Report | Nova Portal{% endblock %}
 {% block content %}
 <section class="card">
-  <h2>Submit HP Indicator Report</h2>
-  <form method="post" id="reportForm">
+  {% set is_edit = report is defined and report %}
+  <h2>{% if is_edit %}Edit HP Indicator Report{% else %}Submit HP Indicator Report{% endif %}</h2>
+  <form method="post" id="reportForm" action="{{ form_action if form_action is defined else '' }}">
     <!-- Basic Info -->
     <div class="form-grid">
-      <label>Hospital Name <input type="text" name="hospital_name" required /></label>
-      <label>District <input type="text" name="district" required /></label>
-      <label>Month / Year <input type="text" name="month_year" placeholder="Mar 2026" required /></label>
+      <label>Hospital Name <input type="text" name="hospital_name" value="{{ report.hospital_name if is_edit else '' }}" required /></label>
+      <label>District <input type="text" name="district" value="{{ report.district if is_edit else '' }}" required /></label>
+      <label>Month / Year <input type="text" name="month_year" placeholder="Mar 2026" value="{{ report.month_year if is_edit else '' }}" required /></label>
     </div>
 
     <h3 class="section-title" style="margin-top:1.5rem;">HP Indicator Data</h3>
@@ -207,16 +208,19 @@
     </div>
 
     <label style="margin-top:1rem;display:block;">Notes / Remarks
-      <textarea name="notes" rows="3" placeholder="Mention maternal &amp; infant deaths here if any"></textarea>
+      <textarea name="notes" rows="3" placeholder="Mention maternal &amp; infant deaths here if any">{{ report.notes if is_edit else '' }}</textarea>
     </label>
 
     <div class="cta-row" style="margin-top:1rem;">
-      <button class="btn primary" type="submit">Submit Report</button>
-      <a class="btn ghost" href="{{ url_for('hospital_reports') }}">Cancel</a>
+      <button class="btn primary" type="submit">{{ submit_label if submit_label is defined else 'Submit Report' }}</button>
+      <a class="btn ghost" href="{{ cancel_url if cancel_url is defined else url_for('hospital_reports') }}">Cancel</a>
     </div>
   </form>
 </section>
 
+{% if initial_data is defined %}
+<script id="hospitalInitialData" type="application/json">{{ initial_data|tojson }}</script>
+{% endif %}
 <script>
 function v(id) { return parseInt(document.getElementById(id)?.value) || 0; }
 function sv(id, val) { const el = document.getElementById(id); if(el) el.value = val; }
@@ -252,6 +256,21 @@ function calcSurg() {
 function calcDeliv() {
   sv('total_deliveries', v('normal_deliveries')+v('caesarean_deliveries'));
 }
-window.onload = function() { calcOP(); ['adm','adm_emer','mlc','sdd','tubec','vasec','minor_surg','major_surg','deaths'].forEach(calcRow); calcSurg(); calcDeliv(); };
+window.onload = function() {
+  const initialNode = document.getElementById('hospitalInitialData');
+  if (initialNode) {
+    const initial = JSON.parse(initialNode.textContent || '{}');
+    Object.entries(initial).forEach(([key, value]) => {
+      const el = document.getElementById(key);
+      if (el) {
+        el.value = value;
+      }
+    });
+  }
+  calcOP();
+  ['adm','adm_emer','mlc','sdd','tubec','vasec','minor_surg','major_surg','deaths'].forEach(calcRow);
+  calcSurg();
+  calcDeliv();
+};
 </script>
 {% endblock %}

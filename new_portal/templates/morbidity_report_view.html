@@ -9,6 +9,7 @@
       <p style="margin:.35rem 0 0;color:var(--muted);">Institution: <strong>{{ report.health_institution_name }}</strong> &nbsp;|&nbsp; Month &amp; Year: <strong>{{ report.month_year }}</strong></p>
     </div>
     <div class="cta-row" style="flex-wrap:wrap;">
+      <a class="btn ghost" href="{{ url_for('morbidity_report_edit', report_id=report.id) }}">Edit</a>
       <a class="btn primary" href="{{ url_for('morbidity_report_excel', report_id=report.id) }}">&#11015; Excel</a>
       <a class="btn ghost" href="{{ url_for('morbidity_report_csv', report_id=report.id) }}">&#11015; CSV</a>
       <a class="btn ghost" href="{{ url_for('morbidity_report_print', report_id=report.id) }}" target="_blank">&#128438; Print / PDF</a>
