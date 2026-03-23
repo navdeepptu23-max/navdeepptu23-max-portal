@@ -2,6 +2,7 @@ import os
 import secrets
 import csv
 import io
+import json
 from functools import wraps
 from datetime import datetime
 
@@ -31,6 +32,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     reports = db.relationship("HospitalReport", backref="owner", lazy=True, cascade="all, delete-orphan")
+    morbidity_reports = db.relationship("MorbidityReport", backref="morbidity_owner", lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -124,6 +126,180 @@ class HospitalReport(db.Model):
     cumulative_inpatient_days = db.Column(db.Integer, default=0)
     user_charges_collection = db.Column(db.Integer, default=0)
     rsby_cases = db.Column(db.Integer, default=0)
+
+
+MORBIDITY_DISEASES = [
+    ("2", "Typhoid Fever and Paratyphoid Fever"),
+    ("5", "Amoebiasis"),
+    ("6", "Diarrhoea"),
+    ("8", "Respiratory TB"),
+    ("10", "T.B of other organ"),
+    ("29", "Measles"),
+    ("31", "Other Viral Hepatitis"),
+    ("32", "HIV"),
+    ("37", "Helminthiasis"),
+    ("79", "Other Anaemia"),
+    ("85", "Disorders of thyroid glands"),
+    ("86", "Diabetes Mellitus"),
+    ("89", "Mental and behavioural Disorder"),
+    ("98", "Diseases of eye"),
+    ("99", "Diseases of the ear"),
+    ("102", "Hypertensive Heart Disease"),
+    ("103", "All other hypertensive diseases"),
+    ("114", "Pharyngitis & Tonsillitis"),
+    ("116", "Other Acute Upper Respiratory Infections"),
+    ("118", "Acute Bronchitis"),
+    ("119", "Ch. Bronchitis and unspecified Emphysema"),
+    ("120", "Asthma"),
+    ("121", "Other lower respiratory disorders"),
+    ("126", "Diseases of Oral Cavity"),
+    ("127", "Gastric and Duodenal ulcer"),
+    ("128", "Gastritis & Duodenitis"),
+    ("134", "Cholelithiasis and Cholecystitis"),
+    ("136", "Other Diseases other part of Digestive system"),
+    ("137", "Infections of skin"),
+    ("138", "All other disease of Skin"),
+    ("139", "Rheumatoid Arthritis & other inflammatory Polyarthropathies"),
+    ("147", "Other diseases of Urinary Track"),
+    ("149", "All other Diseases of male genital organs"),
+    ("151", "All other diseases of female genital organs"),
+    ("152", "Spontaneous Abortion"),
+    ("155", "Oedema/ Proteinuria & Hypertension Disorder in Pregnancy/childbirth & puerperium"),
+    ("157", "Obstructed Labour"),
+    ("158", "Complication predominantly related to puerperium"),
+    ("161", "All other obstetric conditions not elsewhere classified"),
+    ("172", "Abdominal and Pelvic pain"),
+    ("175", "Fever of Unknown origin (PUO)"),
+    ("180", "All other Symptoms, Signs & abnormal clinical / lab findings not elsewhere classified"),
+    ("186", "Dislocations, sprains & Stains of body regions"),
+    ("189", "Other injuries"),
+    ("191", "Burns & Corrosions"),
+    ("192", "Poisoning by drugs & Biological substances and toxic effect of substances"),
+    ("193", "Other specified effects of external causes & certain early complications of trauma"),
+    ("198", "Other Road Side Accidents (RSA)"),
+    ("215", "Bites of snake & other Venomous animals / DOG BITE"),
+]
+
+
+class MorbidityReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    health_institution_name = db.Column(db.String(255), nullable=False)
+    month_year = db.Column(db.String(20), nullable=False)
+    entries_json = db.Column(db.Text, default="{}")
+    notes = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
+def build_morbidity_payload(form_source):
+    payload = {}
+    for sr_no, _ in MORBIDITY_DISEASES:
+        opd = form_source.get(f"morbidity_{sr_no}_opd", 0, type=int)
+        ipd = form_source.get(f"morbidity_{sr_no}_ipd", 0, type=int)
+        payload[sr_no] = {"opd": opd, "ipd": ipd}
+    return payload
+
+
+def morbidity_rows(report):
+    data = json.loads(report.entries_json or "{}")
+    rows = []
+    total_opd = 0
+    total_ipd = 0
+
+    for sr_no, disease_name in MORBIDITY_DISEASES:
+        values = data.get(sr_no, {})
+        opd = int(values.get("opd", 0) or 0)
+        ipd = int(values.get("ipd", 0) or 0)
+        rows.append({
+            "sr_no": sr_no,
+            "disease_name": disease_name,
+            "opd": opd,
+            "ipd": ipd,
+        })
+        total_opd += opd
+        total_ipd += ipd
+
+    return rows, total_opd, total_ipd
+
+
+def total_hospital_outpatients(report):
+    return (
+        (report.op_new_male or 0) + (report.op_new_female or 0) + (report.op_new_male_child or 0) + (report.op_new_female_child or 0)
+        + (report.op_old_male or 0) + (report.op_old_female or 0) + (report.op_old_male_child or 0) + (report.op_old_female_child or 0)
+        + (report.op_emer_male or 0) + (report.op_emer_female or 0) + (report.op_emer_male_child or 0) + (report.op_emer_female_child or 0)
+    )
+
+
+def total_hospital_admissions(report):
+    return (report.adm_male or 0) + (report.adm_female or 0) + (report.adm_male_child or 0) + (report.adm_female_child or 0)
+
+
+def create_morbidity_excel(report, rows, total_opd, total_ipd):
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Morbidity Report"
+
+    border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+    header_fill = PatternFill("solid", fgColor="D9D9D9")
+    title_font = Font(bold=True, size=12)
+    bold_font = Font(bold=True)
+
+    sheet.merge_cells("A1:D1")
+    sheet["A1"] = "PROFORMA II"
+    sheet["A1"].font = title_font
+    sheet["A1"].alignment = Alignment(horizontal="center")
+
+    sheet.merge_cells("A2:D2")
+    sheet["A2"] = "MORBIDITY AND MORTALITY REPORT"
+    sheet["A2"].font = title_font
+    sheet["A2"].alignment = Alignment(horizontal="center")
+
+    sheet["A3"] = f"Name of the Health Institution: {report.health_institution_name}"
+    sheet["C3"] = f"Month & Year: {report.month_year}"
+    sheet["A3"].font = bold_font
+    sheet["C3"].font = bold_font
+
+    headers = ["Sr. No.", "Name of the disease", "OPD", "IPD"]
+    for column, value in enumerate(headers, start=1):
+        cell = sheet.cell(row=4, column=column, value=value)
+        cell.font = bold_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row_index = 5
+    for row in rows:
+        values = [row["sr_no"], row["disease_name"], row["opd"], row["ipd"]]
+        for column, value in enumerate(values, start=1):
+            cell = sheet.cell(row=row_index, column=column, value=value)
+            cell.border = border
+            cell.alignment = Alignment(horizontal="left" if column == 2 else "center", vertical="center", wrap_text=True)
+        row_index += 1
+
+    total_values = ["", "Total", total_opd, total_ipd]
+    for column, value in enumerate(total_values, start=1):
+        cell = sheet.cell(row=row_index, column=column, value=value)
+        cell.font = bold_font
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    sheet.column_dimensions["A"].width = 10
+    sheet.column_dimensions["B"].width = 58
+    sheet.column_dimensions["C"].width = 14
+    sheet.column_dimensions["D"].width = 14
+
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    return output
 
 
 def login_required(view_func):
@@ -243,7 +419,23 @@ def login():
 def dashboard():
     user = current_user()
     reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
-    return render_template("dashboard.html", user=user, reports=reports)
+    morbidity_reports = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
+    morbidity_summaries = []
+    for report in morbidity_reports[:5]:
+        _, total_opd, total_ipd = morbidity_rows(report)
+        morbidity_summaries.append({
+            "report": report,
+            "total_opd": total_opd,
+            "total_ipd": total_ipd,
+        })
+
+    return render_template(
+        "dashboard.html",
+        user=user,
+        reports=reports,
+        morbidity_reports=morbidity_reports,
+        morbidity_summaries=morbidity_summaries,
+    )
 
 
 @app.route("/logout")
@@ -319,6 +511,122 @@ def hospital_reports():
     user = current_user()
     reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
     return render_template("hospital_reports.html", user=user, reports=reports)
+
+
+@app.route("/morbidity/report/new", methods=["GET", "POST"])
+@login_required
+def new_morbidity_report():
+    user = current_user()
+    if request.method == "POST":
+        health_institution_name = request.form.get("health_institution_name", "").strip()
+        month_year = request.form.get("month_year", "").strip()
+
+        if not all([health_institution_name, month_year]):
+            flash("Health institution name and month/year are required.", "danger")
+            return redirect(url_for("new_morbidity_report"))
+
+        report = MorbidityReport(
+            user_id=user.id,
+            health_institution_name=health_institution_name,
+            month_year=month_year,
+            entries_json=json.dumps(build_morbidity_payload(request.form)),
+            notes=request.form.get("notes", "").strip(),
+        )
+        db.session.add(report)
+        db.session.commit()
+        flash("Morbidity and mortality report submitted.", "success")
+        return redirect(url_for("morbidity_reports"))
+
+    return render_template("morbidity_report_form.html", user=user, diseases=MORBIDITY_DISEASES)
+
+
+@app.route("/morbidity/reports")
+@login_required
+def morbidity_reports():
+    user = current_user()
+    reports = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
+    return render_template("morbidity_reports.html", user=user, reports=reports)
+
+
+@app.route("/morbidity/report/<int:report_id>")
+@login_required
+def morbidity_report_view(report_id):
+    user = current_user()
+    report = MorbidityReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission to view this report.", "danger")
+        return redirect(url_for("morbidity_reports"))
+
+    rows, total_opd, total_ipd = morbidity_rows(report)
+    return render_template(
+        "morbidity_report_view.html",
+        user=user,
+        report=report,
+        rows=rows,
+        total_opd=total_opd,
+        total_ipd=total_ipd,
+    )
+
+
+@app.route("/morbidity/report/<int:report_id>/print")
+@login_required
+def morbidity_report_print(report_id):
+    user = current_user()
+    report = MorbidityReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission.", "danger")
+        return redirect(url_for("morbidity_reports"))
+
+    rows, total_opd, total_ipd = morbidity_rows(report)
+    return render_template("morbidity_report_print.html", report=report, rows=rows, total_opd=total_opd, total_ipd=total_ipd)
+
+
+@app.route("/morbidity/report/<int:report_id>/export/csv")
+@login_required
+def morbidity_report_csv(report_id):
+    user = current_user()
+    report = MorbidityReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission.", "danger")
+        return redirect(url_for("morbidity_reports"))
+
+    rows, total_opd, total_ipd = morbidity_rows(report)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["PROFORMA II"])
+    writer.writerow(["MORBIDITY AND MORTALITY REPORT"])
+    writer.writerow([f"Name of the Health Institution: {report.health_institution_name}", "", f"Month & Year: {report.month_year}"])
+    writer.writerow(["Sr. No.", "Name of the disease", "OPD", "IPD"])
+    for row in rows:
+        writer.writerow([row["sr_no"], row["disease_name"], row["opd"], row["ipd"]])
+    writer.writerow(["", "Total", total_opd, total_ipd])
+    if report.notes:
+        writer.writerow([])
+        writer.writerow(["Notes", report.notes])
+
+    filename = f"{report.health_institution_name}_{report.month_year}_morbidity_report.csv".replace(" ", "_")
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
+
+@app.route("/morbidity/report/<int:report_id>/export/excel")
+@login_required
+def morbidity_report_excel(report_id):
+    user = current_user()
+    report = MorbidityReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission.", "danger")
+        return redirect(url_for("morbidity_reports"))
+
+    rows, total_opd, total_ipd = morbidity_rows(report)
+    output = create_morbidity_excel(report, rows, total_opd, total_ipd)
+    filename = f"{report.health_institution_name}_{report.month_year}_morbidity_report.xlsx".replace(" ", "_")
+    response = make_response(output.read())
+    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
 
 
 @app.route("/hospital/report/<int:report_id>")
@@ -547,17 +855,23 @@ def admin_dashboard():
     admin = current_admin()
     users = User.query.order_by(User.created_at.desc()).all()
     reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
     stats = {
         "total_users": len(users),
-        "total_reports": len(reports),
-        "total_outpatients": sum(
-            (r.op_new_male or 0) + (r.op_new_female or 0) + (r.op_new_male_child or 0) + (r.op_new_female_child or 0) +
-            (r.op_old_male or 0) + (r.op_old_female or 0) + (r.op_old_male_child or 0) + (r.op_old_female_child or 0) +
-            (r.op_emer_male or 0) + (r.op_emer_female or 0) + (r.op_emer_male_child or 0) + (r.op_emer_female_child or 0)
-            for r in reports
-        ),
+        "total_reports": len(reports) + len(morbidity_reports),
+        "total_hospital_reports": len(reports),
+        "total_morbidity_reports": len(morbidity_reports),
+        "total_outpatients": sum(total_hospital_outpatients(r) for r in reports),
     }
-    return render_template("admin_dashboard.html", user=current_user(), admin=admin, users=users, reports=reports, stats=stats)
+    return render_template(
+        "admin_dashboard.html",
+        user=current_user(),
+        admin=admin,
+        users=users,
+        reports=reports,
+        morbidity_reports=morbidity_reports,
+        stats=stats,
+    )
 
 
 @app.route("/admin/users")
@@ -870,6 +1184,62 @@ def admin_reports_export():
     response = make_response(output.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     response.headers["Content-Disposition"] = "attachment; filename=hospital_reports.csv"
+    return response
+
+
+@app.route("/admin/morbidity-report/<int:report_id>")
+@admin_required
+def admin_morbidity_report_view(report_id):
+    report = MorbidityReport.query.get_or_404(report_id)
+    rows, total_opd, total_ipd = morbidity_rows(report)
+    return render_template(
+        "admin_morbidity_report_view.html",
+        user=current_user(),
+        admin=current_admin(),
+        report=report,
+        rows=rows,
+        total_opd=total_opd,
+        total_ipd=total_ipd,
+    )
+
+
+@app.route("/admin/morbidity-report/<int:report_id>/delete", methods=["POST"])
+@admin_required
+def admin_morbidity_report_delete(report_id):
+    report = MorbidityReport.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    flash("Morbidity report deleted.", "info")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/morbidity-reports/export.csv")
+@admin_required
+def admin_morbidity_reports_export():
+    reports = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id", "health_institution_name", "month_year", "owner_username", "owner_email", "sr_no", "disease_name", "opd", "ipd", "notes", "created_at"])
+    for report in reports:
+        rows, _, _ = morbidity_rows(report)
+        for row in rows:
+            writer.writerow([
+                report.id,
+                report.health_institution_name,
+                report.month_year,
+                report.morbidity_owner.username,
+                report.morbidity_owner.email,
+                row["sr_no"],
+                row["disease_name"],
+                row["opd"],
+                row["ipd"],
+                report.notes,
+                report.created_at.isoformat(),
+            ])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = "attachment; filename=morbidity_reports.csv"
     return response
 
 

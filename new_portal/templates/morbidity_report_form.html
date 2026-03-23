@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}New Morbidity Report | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>PROFORMA II</h2>
+  <p class="section-title" style="margin-top:0;">Morbidity and Mortality Report</p>
+
+  <form method="post">
+    <div class="form-grid form-grid-2">
+      <label>Name of the Health Institution
+        <input type="text" name="health_institution_name" required />
+      </label>
+      <label>Month &amp; Year
+        <input type="text" name="month_year" placeholder="APR-2024" required />
+      </label>
+    </div>
+
+    <div class="report-table-wrapper" style="margin-top:1rem;">
+      <table class="report-table morbidity-table">
+        <thead>
+          <tr>
+            <th style="width:90px;">Sr. No.</th>
+            <th style="min-width:360px;">Name of the disease</th>
+            <th>OPD</th>
+            <th>IPD</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sr_no, disease_name in diseases %}
+            <tr>
+              <td class="single-val">{{ sr_no }}</td>
+              <td class="indicator bold">{{ disease_name }}</td>
+              <td><input type="number" min="0" name="morbidity_{{ sr_no }}_opd" value="0" /></td>
+              <td><input type="number" min="0" name="morbidity_{{ sr_no }}_ipd" value="0" /></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <label style="margin-top:1rem;display:block;">Notes / Remarks
+      <textarea name="notes" rows="3" placeholder="Optional notes"></textarea>
+    </label>
+
+    <div class="cta-row" style="margin-top:1rem;">
+      <button class="btn primary" type="submit">Submit Morbidity Report</button>
+      <a class="btn ghost" href="{{ url_for('morbidity_reports') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -21,12 +21,14 @@
       </thead>
       <tbody>
         {% for report in reports %}
+          {% set outpatients = report.op_new_male + report.op_new_female + report.op_new_male_child + report.op_new_female_child + report.op_old_male + report.op_old_female + report.op_old_male_child + report.op_old_female_child + report.op_emer_male + report.op_emer_female + report.op_emer_male_child + report.op_emer_female_child %}
+          {% set admissions = report.adm_male + report.adm_female + report.adm_male_child + report.adm_female_child %}
           <tr>
             <td>{{ report.hospital_name }}</td>
             <td>{{ report.district }}</td>
             <td>{{ report.month_year }}</td>
-            <td>{{ report.outpatients }}</td>
-            <td>{{ report.admissions }}</td>
+            <td>{{ outpatients }}</td>
+            <td>{{ admissions }}</td>
             <td><a href="{{ url_for('hospital_report_view', report_id=report.id) }}">Open</a></td>
           </tr>
         {% endfor %}

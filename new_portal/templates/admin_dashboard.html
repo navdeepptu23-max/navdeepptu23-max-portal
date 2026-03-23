@@ -6,6 +6,7 @@
   <p>Welcome {{ admin.username }}. Track users and all submitted reports.</p>
   <div class="cta-row">
     <a class="btn primary" href="{{ url_for('admin_reports_export') }}">Export CSV</a>
+    <a class="btn ghost" href="{{ url_for('admin_morbidity_reports_export') }}">Export Morbidity CSV</a>
     <a class="btn ghost" href="{{ url_for('admin_user_create') }}">Create Login ID</a>
     <a class="btn ghost" href="{{ url_for('admin_users') }}">Manage Users</a>
     <a class="btn ghost" href="{{ url_for('admin_logout') }}">Admin Logout</a>
@@ -21,12 +22,20 @@
       <p>{{ stats.total_reports }}</p>
     </article>
     <article>
+      <h3>Hospital Reports</h3>
+      <p>{{ stats.total_hospital_reports }}</p>
+    </article>
+    <article>
+      <h3>Morbidity Reports</h3>
+      <p>{{ stats.total_morbidity_reports }}</p>
+    </article>
+    <article>
       <h3>Total Outpatients</h3>
       <p>{{ stats.total_outpatients }}</p>
     </article>
   </div>
 
-  <h3 class="section-title">Recent Reports</h3>
+  <h3 class="section-title">Recent HP Reports</h3>
   {% if reports %}
     <table class="table">
       <thead>
@@ -58,6 +67,38 @@
     </table>
   {% else %}
     <p>No reports submitted yet.</p>
+  {% endif %}
+
+  <h3 class="section-title">Recent Morbidity Reports</h3>
+  {% if morbidity_reports %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Institution</th>
+          <th>Owner</th>
+          <th>Month</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in morbidity_reports[:10] %}
+          <tr>
+            <td>{{ report.health_institution_name }}</td>
+            <td>{{ report.morbidity_owner.username }}</td>
+            <td>{{ report.month_year }}</td>
+            <td>
+              <a href="{{ url_for('admin_morbidity_report_view', report_id=report.id) }}">Open</a>
+              <span class="action-sep">|</span>
+              <form class="inline-form" method="post" action="{{ url_for('admin_morbidity_report_delete', report_id=report.id) }}" onsubmit="return confirm('Delete this morbidity report?');">
+                <button class="link-btn danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No morbidity reports submitted yet.</p>
   {% endif %}
 </section>
 {% endblock %}

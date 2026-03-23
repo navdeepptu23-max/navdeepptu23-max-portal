@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ report.health_institution_name }} — {{ report.month_year }} | Morbidity Report{% endblock %}
+{% block content %}
+<section class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
+    <div>
+      <h2>PROFORMA II</h2>
+      <p style="margin:0;"><strong>Morbidity and Mortality Report</strong></p>
+      <p style="margin:.35rem 0 0;color:var(--muted);">Institution: <strong>{{ report.health_institution_name }}</strong> &nbsp;|&nbsp; Month &amp; Year: <strong>{{ report.month_year }}</strong></p>
+    </div>
+    <div class="cta-row" style="flex-wrap:wrap;">
+      <a class="btn primary" href="{{ url_for('morbidity_report_excel', report_id=report.id) }}">&#11015; Excel</a>
+      <a class="btn ghost" href="{{ url_for('morbidity_report_csv', report_id=report.id) }}">&#11015; CSV</a>
+      <a class="btn ghost" href="{{ url_for('morbidity_report_print', report_id=report.id) }}" target="_blank">&#128438; Print / PDF</a>
+      <a class="btn ghost" href="{{ url_for('morbidity_reports') }}">&larr; Back</a>
+    </div>
+  </div>
+
+  <div class="report-table-wrapper" style="margin-top:1.5rem;">
+    <table class="report-table morbidity-table">
+      <thead>
+        <tr>
+          <th style="width:90px;">Sr. No.</th>
+          <th style="min-width:360px;">Name of the disease</th>
+          <th>OPD</th>
+          <th>IPD</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td class="single-val">{{ row.sr_no }}</td>
+            <td class="indicator bold">{{ row.disease_name }}</td>
+            <td class="single-val">{{ row.opd }}</td>
+            <td class="single-val">{{ row.ipd }}</td>
+          </tr>
+        {% endfor %}
+        <tr class="row-total">
+          <td></td>
+          <td class="indicator bold">Total</td>
+          <td class="single-val">{{ total_opd }}</td>
+          <td class="single-val">{{ total_ipd }}</td>
+        </tr>
+        {% if report.notes %}
+          <tr>
+            <td></td>
+            <td class="indicator bold">Notes</td>
+            <td colspan="2">{{ report.notes }}</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}My Morbidity Reports | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>My Morbidity Reports</h2>
+  <div class="cta-row">
+    <a class="btn primary" href="{{ url_for('new_morbidity_report') }}">Add Morbidity Report</a>
+  </div>
+
+  {% if reports %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Institution</th>
+          <th>Month</th>
+          <th>Created</th>
+          <th>View</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+          <tr>
+            <td>{{ report.health_institution_name }}</td>
+            <td>{{ report.month_year }}</td>
+            <td>{{ report.created_at.strftime('%d %b %Y') }}</td>
+            <td><a href="{{ url_for('morbidity_report_view', report_id=report.id) }}">Open</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No morbidity reports yet. Create your first one.</p>
+  {% endif %}
+</section>
+{% endblock %}

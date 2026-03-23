@@ -114,6 +114,10 @@ p {
   gap: 0.9rem;
 }
 
+.form-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
 label {
   display: grid;
   gap: 0.35rem;
@@ -329,6 +333,15 @@ textarea:focus {
   font-weight: 700;
   color: var(--accent);
   cursor: default;
+}
+
+.morbidity-table td.indicator {
+  min-width: 320px;
+  max-width: 520px;
+}
+
+.morbidity-table input[type="number"] {
+  width: 92px;
 }
 
 @media (max-width: 640px) {
