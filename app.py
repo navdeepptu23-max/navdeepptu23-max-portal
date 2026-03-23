@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime, timedelta
@@ -209,6 +210,18 @@ def get_current_admin():
     return None
 
 
+def find_user_by_credential(credential):
+    """Find user by username (case-insensitive) or email (case-insensitive)."""
+    credential = (credential or '').strip()
+    if not credential:
+        return None
+
+    user = User.query.filter(func.lower(User.username) == credential.lower()).first()
+    if not user and '@' in credential:
+        user = User.query.filter(func.lower(User.email) == credential.lower()).first()
+    return user
+
+
 # ==================== ROUTES: PUBLIC ====================
 
 @app.route('/')
@@ -239,7 +252,7 @@ def about():
 def register():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         full_name = request.form.get('full_name', '').strip()
         
@@ -252,11 +265,11 @@ def register():
             flash('Password must be at least 8 characters', 'danger')
             return redirect(url_for('register'))
         
-        if User.query.filter_by(username=username).first():
+        if User.query.filter(func.lower(User.username) == username.lower()).first():
             flash('Username already exists', 'danger')
             return redirect(url_for('register'))
         
-        if User.query.filter_by(email=email).first():
+        if User.query.filter(func.lower(User.email) == email.lower()).first():
             flash('Email already registered', 'danger')
             return redirect(url_for('register'))
         
@@ -284,26 +297,29 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
+        credential = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         
-        print(f"[LOGIN] Attempting login for username: {username}")
+        print(f"[LOGIN] Attempting login for credential: {credential}")
         
         try:
-            user = User.query.filter_by(username=username).first()
+            user = find_user_by_credential(credential)
             
             if user:
-                print(f"[LOGIN] User found: {username}")
+                print(f"[LOGIN] User found: {user.username}")
+                if not user.is_active:
+                    flash('Your account is inactive. Contact admin.', 'danger')
+                    return redirect(url_for('login'))
                 if user.check_password(password):
-                    print(f"[LOGIN] Password correct for {username}")
+                    print(f"[LOGIN] Password correct for {user.username}")
                     session['user_id'] = user.id
                     session.permanent = True
                     flash(f'Welcome back, {user.username}!', 'success')
                     return redirect(url_for('dashboard'))
                 else:
-                    print(f"[LOGIN] Password INCORRECT for {username}")
+                    print(f"[LOGIN] Password INCORRECT for {user.username}")
             else:
-                print(f"[LOGIN] User NOT found: {username}")
+                print(f"[LOGIN] User NOT found for credential: {credential}")
                 try:
                     print(f"[LOGIN] Total users in database: {User.query.count()}")
                 except Exception as count_err:
@@ -331,12 +347,12 @@ def logout():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        username = request.form.get('username', '')
+        credential = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         
-        admin = User.query.filter_by(username=username).first()
+        admin = find_user_by_credential(credential)
         
-        if admin and admin.is_admin and admin.check_password(password):
+        if admin and admin.is_admin and admin.is_active and admin.check_password(password):
             session['admin_id'] = admin.id
             session.permanent = True
             flash(f'Welcome Admin, {admin.username}!', 'success')
