@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ title }}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; padding: 1cm; color: #000; }
+    .actions { text-align: center; margin-bottom: 12px; }
+    .actions button, .actions a { display: inline-block; padding: 8px 16px; border: none; text-decoration: none; background: #c2410c; color: #fff; margin: 0 4px; border-radius: 4px; }
+    .actions a { background: #6b7280; }
+    h1 { text-align: center; font-size: 14pt; }
+    p { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #555; padding: 4px 6px; font-size: 10pt; }
+    th { background: #d9d9d9; }
+    @media print { .actions { display: none; } body { padding: .5cm; } }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <button onclick="window.print()">Print / Save as PDF</button>
+    <a href="javascript:history.back()">Back</a>
+  </div>
+  <h1>{{ title }}</h1>
+  <p>Combined view of HP Indicator and Morbidity reports</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Institution</th>
+        <th>District</th>
+        <th>Month</th>
+        <th>Metric 1</th>
+        <th>Metric 2</th>
+        {% if show_owner %}
+          <th>Owner</th>
+        {% endif %}
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td>{{ row.report_type }}</td>
+          <td>{{ row.institution }}</td>
+          <td>{{ row.district }}</td>
+          <td>{{ row.month_year }}</td>
+          <td>{{ row.metric_one_label }}: {{ row.metric_one }}</td>
+          <td>{{ row.metric_two_label }}: {{ row.metric_two }}</td>
+          {% if show_owner %}
+            <td>{{ row.owner_username }}</td>
+          {% endif %}
+          <td>{{ row.created_at.strftime('%Y-%m-%d') }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

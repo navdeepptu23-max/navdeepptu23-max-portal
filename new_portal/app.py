@@ -302,6 +302,118 @@ def create_morbidity_excel(report, rows, total_opd, total_ipd):
     return output
 
 
+def build_consolidated_rows(hospital_reports, morbidity_reports, include_owner=False):
+    rows = []
+
+    for report in hospital_reports:
+        row = {
+            "report_type": "HP Indicator",
+            "institution": report.hospital_name,
+            "district": report.district,
+            "month_year": report.month_year,
+            "metric_one_label": "Outpatients",
+            "metric_one": total_hospital_outpatients(report),
+            "metric_two_label": "Admissions",
+            "metric_two": total_hospital_admissions(report),
+            "created_at": report.created_at,
+            "view_url": url_for("hospital_report_view", report_id=report.id),
+        }
+        if include_owner:
+            row["owner_username"] = report.owner.username
+            row["owner_email"] = report.owner.email
+            row["view_url"] = url_for("admin_report_view", report_id=report.id)
+        rows.append(row)
+
+    for report in morbidity_reports:
+        _, total_opd, total_ipd = morbidity_rows(report)
+        row = {
+            "report_type": "Morbidity",
+            "institution": report.health_institution_name,
+            "district": "-",
+            "month_year": report.month_year,
+            "metric_one_label": "OPD",
+            "metric_one": total_opd,
+            "metric_two_label": "IPD",
+            "metric_two": total_ipd,
+            "created_at": report.created_at,
+            "view_url": url_for("morbidity_report_view", report_id=report.id),
+        }
+        if include_owner:
+            row["owner_username"] = report.morbidity_owner.username
+            row["owner_email"] = report.morbidity_owner.email
+            row["view_url"] = url_for("admin_morbidity_report_view", report_id=report.id)
+        rows.append(row)
+
+    rows.sort(key=lambda item: item["created_at"], reverse=True)
+    return rows
+
+
+def build_consolidated_excel(title, rows, include_owner=False):
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Consolidated Report"
+
+    border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+    header_fill = PatternFill("solid", fgColor="C2410C")
+    header_font = Font(bold=True, color="FFFFFF")
+    bold_font = Font(bold=True)
+
+    headers = ["Report Type", "Institution", "District", "Month / Year", "Metric 1", "Value 1", "Metric 2", "Value 2", "Created"]
+    if include_owner:
+        headers.extend(["Owner Username", "Owner Email"])
+
+    sheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+    title_cell = sheet.cell(row=1, column=1, value=title)
+    title_cell.font = Font(bold=True, size=13)
+    title_cell.alignment = Alignment(horizontal="center")
+
+    for index, value in enumerate(headers, start=1):
+        cell = sheet.cell(row=2, column=index, value=value)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    row_index = 3
+    for row in rows:
+        values = [
+            row["report_type"],
+            row["institution"],
+            row["district"],
+            row["month_year"],
+            row["metric_one_label"],
+            row["metric_one"],
+            row["metric_two_label"],
+            row["metric_two"],
+            row["created_at"].strftime("%Y-%m-%d"),
+        ]
+        if include_owner:
+            values.extend([row["owner_username"], row["owner_email"]])
+
+        for column, value in enumerate(values, start=1):
+            cell = sheet.cell(row=row_index, column=column, value=value)
+            cell.border = border
+            cell.alignment = Alignment(horizontal="center" if column != 2 else "left", vertical="center", wrap_text=True)
+        row_index += 1
+
+    for column_index, width in enumerate([18, 30, 18, 16, 14, 12, 14, 12, 14, 18, 26], start=1):
+        if column_index <= len(headers):
+            sheet.column_dimensions[chr(64 + column_index)].width = width
+
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    return output
+
+
 def login_required(view_func):
     @wraps(view_func)
     def wrapped(*args, **kwargs):
@@ -412,6 +524,39 @@ def login():
         return redirect(url_for("login"))
 
     return render_template("login.html", user=current_user())
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not all([username, email, new_password, confirm_password]):
+            flash("All fields are required.", "danger")
+            return redirect(url_for("forgot_password"))
+
+        if new_password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return redirect(url_for("forgot_password"))
+
+        if len(new_password) < 8:
+            flash("Password must be at least 8 characters.", "danger")
+            return redirect(url_for("forgot_password"))
+
+        user = User.query.filter_by(username=username, email=email).first()
+        if not user:
+            flash("No account matched that username and email.", "danger")
+            return redirect(url_for("forgot_password"))
+
+        user.set_password(new_password)
+        db.session.commit()
+        flash("Password updated successfully. Please login.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("forgot_password.html", user=current_user())
 
 
 @app.route("/dashboard")
@@ -546,6 +691,65 @@ def morbidity_reports():
     user = current_user()
     reports = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
     return render_template("morbidity_reports.html", user=user, reports=reports)
+
+
+@app.route("/reports/consolidated")
+@login_required
+def consolidated_reports():
+    user = current_user()
+    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list)
+    return render_template("consolidated_reports.html", user=user, rows=rows, show_owner=False, title="My Consolidated Reports")
+
+
+@app.route("/reports/consolidated/print")
+@login_required
+def consolidated_reports_print():
+    user = current_user()
+    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list)
+    return render_template("consolidated_reports_print.html", rows=rows, show_owner=False, title="My Consolidated Reports")
+
+
+@app.route("/reports/consolidated/export/csv")
+@login_required
+def consolidated_reports_csv():
+    user = current_user()
+    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["report_type", "institution", "district", "month_year", "metric_one_label", "metric_one", "metric_two_label", "metric_two", "created_at"])
+    for row in rows:
+        writer.writerow([
+            row["report_type"], row["institution"], row["district"], row["month_year"],
+            row["metric_one_label"], row["metric_one"], row["metric_two_label"], row["metric_two"],
+            row["created_at"].isoformat(),
+        ])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = "attachment; filename=consolidated_reports.csv"
+    return response
+
+
+@app.route("/reports/consolidated/export/excel")
+@login_required
+def consolidated_reports_excel():
+    user = current_user()
+    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list)
+    output = build_consolidated_excel("My Consolidated Reports", rows)
+
+    response = make_response(output.read())
+    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    response.headers["Content-Disposition"] = "attachment; filename=consolidated_reports.xlsx"
+    return response
 
 
 @app.route("/morbidity/report/<int:report_id>")
@@ -1240,6 +1444,61 @@ def admin_morbidity_reports_export():
     response = make_response(output.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     response.headers["Content-Disposition"] = "attachment; filename=morbidity_reports.csv"
+    return response
+
+
+@app.route("/admin/reports/consolidated")
+@admin_required
+def admin_consolidated_reports():
+    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, include_owner=True)
+    return render_template("consolidated_reports.html", user=current_user(), rows=rows, show_owner=True, title="Admin Consolidated Reports")
+
+
+@app.route("/admin/reports/consolidated/print")
+@admin_required
+def admin_consolidated_reports_print():
+    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, include_owner=True)
+    return render_template("consolidated_reports_print.html", rows=rows, show_owner=True, title="Admin Consolidated Reports")
+
+
+@app.route("/admin/reports/consolidated/export/csv")
+@admin_required
+def admin_consolidated_reports_csv():
+    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, include_owner=True)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["report_type", "institution", "district", "month_year", "metric_one_label", "metric_one", "metric_two_label", "metric_two", "owner_username", "owner_email", "created_at"])
+    for row in rows:
+        writer.writerow([
+            row["report_type"], row["institution"], row["district"], row["month_year"],
+            row["metric_one_label"], row["metric_one"], row["metric_two_label"], row["metric_two"],
+            row["owner_username"], row["owner_email"], row["created_at"].isoformat(),
+        ])
+
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = "attachment; filename=admin_consolidated_reports.csv"
+    return response
+
+
+@app.route("/admin/reports/consolidated/export/excel")
+@admin_required
+def admin_consolidated_reports_excel():
+    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
+    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, include_owner=True)
+    output = build_consolidated_excel("Admin Consolidated Reports", rows, include_owner=True)
+
+    response = make_response(output.read())
+    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    response.headers["Content-Disposition"] = "attachment; filename=admin_consolidated_reports.xlsx"
     return response
 
 

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
+    <div>
+      <h2>{{ title }}</h2>
+      <p>Combined view of HP Indicator and Morbidity reports.</p>
+    </div>
+    <div class="cta-row" style="flex-wrap:wrap;">
+      {% if show_owner %}
+        <a class="btn primary" href="{{ url_for('admin_consolidated_reports_excel') }}">&#11015; Excel</a>
+        <a class="btn ghost" href="{{ url_for('admin_consolidated_reports_csv') }}">&#11015; CSV</a>
+        <a class="btn ghost" href="{{ url_for('admin_consolidated_reports_print') }}" target="_blank">&#128438; Print / PDF</a>
+      {% else %}
+        <a class="btn primary" href="{{ url_for('consolidated_reports_excel') }}">&#11015; Excel</a>
+        <a class="btn ghost" href="{{ url_for('consolidated_reports_csv') }}">&#11015; CSV</a>
+        <a class="btn ghost" href="{{ url_for('consolidated_reports_print') }}" target="_blank">&#128438; Print / PDF</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if rows %}
+    <table class="table" style="margin-top:1rem;">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Institution</th>
+          <th>District</th>
+          <th>Month</th>
+          <th>Metric 1</th>
+          <th>Metric 2</th>
+          {% if show_owner %}
+            <th>Owner</th>
+          {% endif %}
+          <th>Created</th>
+          <th>Open</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{{ row.report_type }}</td>
+            <td>{{ row.institution }}</td>
+            <td>{{ row.district }}</td>
+            <td>{{ row.month_year }}</td>
+            <td>{{ row.metric_one_label }}: {{ row.metric_one }}</td>
+            <td>{{ row.metric_two_label }}: {{ row.metric_two }}</td>
+            {% if show_owner %}
+              <td>{{ row.owner_username }}</td>
+            {% endif %}
+            <td>{{ row.created_at.strftime('%Y-%m-%d') }}</td>
+            <td><a href="{{ row.view_url }}">Open</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No reports available yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
