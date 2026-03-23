@@ -1,3 +1,8 @@
+databases:
+  - name: possireports-db
+    plan: free
+    region: singapore
+
 services:
   - type: web
     name: possireports
@@ -11,3 +16,13 @@ services:
         generateValue: true
       - key: PYTHON_VERSION
         value: 3.11.4
+      - key: DATABASE_URL
+        fromDatabase:
+          name: possireports-db
+          property: connectionString
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_EMAIL
+        value: admin@possireports.in
+      - key: ADMIN_PASSWORD
+        generateValue: true

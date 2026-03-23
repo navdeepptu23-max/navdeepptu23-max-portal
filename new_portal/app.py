@@ -16,7 +16,11 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", secrets.token_hex(32))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///portal.db"
+_database_url = os.getenv("DATABASE_URL", "sqlite:///portal.db")
+# Render provides postgres:// but SQLAlchemy ≥1.4 requires postgresql://
+if _database_url.startswith("postgres://"):
+    _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = _database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -2796,29 +2800,33 @@ def admin_logout():
 
 def initialize_database() -> None:
     with app.app_context():
-        # Migrate hospital_report table if schema is outdated
-        try:
-            result = db.session.execute(text("PRAGMA table_info(hospital_report)")).fetchall()
-            if result:
-                existing_cols = {row[1] for row in result}
-                if "op_new_male" not in existing_cols:
-                    db.session.execute(text("DROP TABLE hospital_report"))
-                    db.session.commit()
-        except Exception:
-            db.session.rollback()
+        _is_sqlite = app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite")
+
+        if _is_sqlite:
+            # Migrate hospital_report table if schema is outdated (SQLite only)
+            try:
+                result = db.session.execute(text("PRAGMA table_info(hospital_report)")).fetchall()
+                if result:
+                    existing_cols = {row[1] for row in result}
+                    if "op_new_male" not in existing_cols:
+                        db.session.execute(text("DROP TABLE hospital_report"))
+                        db.session.commit()
+            except Exception:
+                db.session.rollback()
 
         db.create_all()
 
-        # Lightweight migration for existing SQLite DBs created before is_active existed.
-        try:
-            result = db.session.execute(text("PRAGMA table_info(user)")).fetchall()
-            user_columns = [row[1] for row in result]
-            if "is_active" not in user_columns:
-                db.session.execute(text("ALTER TABLE user ADD COLUMN is_active BOOLEAN DEFAULT 1"))
-                db.session.execute(text("UPDATE user SET is_active = 1 WHERE is_active IS NULL"))
-                db.session.commit()
-        except Exception:
-            db.session.rollback()
+        if _is_sqlite:
+            # Lightweight migration for existing SQLite DBs created before is_active existed.
+            try:
+                result = db.session.execute(text("PRAGMA table_info(user)")).fetchall()
+                user_columns = [row[1] for row in result]
+                if "is_active" not in user_columns:
+                    db.session.execute(text("ALTER TABLE user ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+                    db.session.execute(text("UPDATE user SET is_active = 1 WHERE is_active IS NULL"))
+                    db.session.commit()
+            except Exception:
+                db.session.rollback()
 
         admin_username = os.getenv("ADMIN_USERNAME", "admin")
         admin_email = os.getenv("ADMIN_EMAIL", "admin@nova.local")
