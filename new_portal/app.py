@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, session, url_for, make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text, func
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.pool import NullPool
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -1801,55 +1802,77 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-def initialize_database() -> None:
+_db_initialized = False
+
+
+def initialize_database() -> bool:
+    global _db_initialized
     with app.app_context():
         _is_sqlite = app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite")
 
-        if _is_sqlite:
-            # Migrate hospital_report table if schema is outdated (SQLite only)
-            try:
-                result = db.session.execute(text("PRAGMA table_info(hospital_report)")).fetchall()
-                if result:
-                    existing_cols = {row[1] for row in result}
-                    if "op_new_male" not in existing_cols:
-                        db.session.execute(text("DROP TABLE hospital_report"))
+        try:
+            if _is_sqlite:
+                # Migrate hospital_report table if schema is outdated (SQLite only)
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(hospital_report)")).fetchall()
+                    if result:
+                        existing_cols = {row[1] for row in result}
+                        if "op_new_male" not in existing_cols:
+                            db.session.execute(text("DROP TABLE hospital_report"))
+                            db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            db.create_all()
+
+            if _is_sqlite:
+                # Lightweight migration for existing SQLite DBs created before is_active existed.
+                try:
+                    result = db.session.execute(text("PRAGMA table_info(user)")).fetchall()
+                    user_columns = [row[1] for row in result]
+                    if "is_active" not in user_columns:
+                        db.session.execute(text("ALTER TABLE user ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+                        db.session.execute(text("UPDATE user SET is_active = 1 WHERE is_active IS NULL"))
                         db.session.commit()
-            except Exception:
-                db.session.rollback()
+                except Exception:
+                    db.session.rollback()
 
-        db.create_all()
+            admin_username = os.getenv("ADMIN_USERNAME", "admin")
+            admin_email = os.getenv("ADMIN_EMAIL", "admin@nova.local")
+            admin_password = os.getenv("ADMIN_PASSWORD", "Admin@123")
 
-        if _is_sqlite:
-            # Lightweight migration for existing SQLite DBs created before is_active existed.
-            try:
-                result = db.session.execute(text("PRAGMA table_info(user)")).fetchall()
-                user_columns = [row[1] for row in result]
-                if "is_active" not in user_columns:
-                    db.session.execute(text("ALTER TABLE user ADD COLUMN is_active BOOLEAN DEFAULT 1"))
-                    db.session.execute(text("UPDATE user SET is_active = 1 WHERE is_active IS NULL"))
-                    db.session.commit()
-            except Exception:
-                db.session.rollback()
+            admin = User.query.filter_by(username=admin_username).first()
+            if not admin:
+                admin = User(username=admin_username, email=admin_email, is_admin=True)
+                admin.set_password(admin_password)
+                db.session.add(admin)
+                db.session.commit()
+            else:
+                # Keep admin credentials aligned with environment configuration on deploy.
+                admin.email = admin_email
+                admin.is_admin = True
+                admin.set_password(admin_password)
+                db.session.commit()
 
-        admin_username = os.getenv("ADMIN_USERNAME", "admin")
-        admin_email = os.getenv("ADMIN_EMAIL", "admin@nova.local")
-        admin_password = os.getenv("ADMIN_PASSWORD", "Admin@123")
-
-        admin = User.query.filter_by(username=admin_username).first()
-        if not admin:
-            admin = User(username=admin_username, email=admin_email, is_admin=True)
-            admin.set_password(admin_password)
-            db.session.add(admin)
-            db.session.commit()
-        else:
-            # Keep admin credentials aligned with environment configuration on deploy.
-            admin.email = admin_email
-            admin.is_admin = True
-            admin.set_password(admin_password)
-            db.session.commit()
+            _db_initialized = True
+            return True
+        except OperationalError as exc:
+            db.session.rollback()
+            print(f"[DB INIT WARNING] Database unavailable during startup: {exc}")
+            return False
+        except Exception as exc:
+            db.session.rollback()
+            print(f"[DB INIT WARNING] Database initialization failed: {exc}")
+            return False
 
 
 initialize_database()
+
+
+@app.before_request
+def ensure_database_initialized() -> None:
+    if not _db_initialized:
+        initialize_database()
 
 
 if __name__ == "__main__":
