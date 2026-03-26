@@ -9,7 +9,7 @@ services:
     env: python
     rootDir: new_portal
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn --workers 1 --threads 4 --timeout 120 app:app
     plan: free
     envVars:
       - key: SECRET_KEY
@@ -25,4 +25,4 @@ services:
       - key: ADMIN_EMAIL
         value: admin@possireports.in
       - key: ADMIN_PASSWORD
-        value: Admin@2026#Reset
+        value: "Admin@2026#Reset"

@@ -23,6 +23,20 @@ if _database_url.startswith("postgres://"):
 app.config["SQLALCHEMY_DATABASE_URI"] = _database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# Avoid connection-pool exhaustion (SQLAlchemy error e3q8) on small Render DB plans.
+if _database_url.startswith("sqlite"):
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+    }
+else:
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_size": 5,
+        "max_overflow": 2,
+        "pool_timeout": 30,
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+
 db = SQLAlchemy(app)
 
 
