@@ -1,42 +1,82 @@
-{% extends "base.html" %}
+{% extends "auth_base.html" %}
 
-{% block title %}Register - Web Portal{% endblock %}
+{% block title %}Register - Portal{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>📝 Create Account</h2>
-    
-    <form method="POST">
-        <div class="form-group">
-            <label for="full_name">Full Name</label>
-            <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required autofocus>
-        </div>
-        
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Choose a username" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="Enter your email" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Minimum 6 characters" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="confirm_password">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
-        </div>
-        
-        <button type="submit">Register</button>
-    </form>
-    
-    <div class="links">
-        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="logo-circle"><i class="fas fa-user-plus"></i></div>
+    <h1>Create Account</h1>
+    <p>Join Portal for free</p>
+  </div>
+
+  <hr class="auth-divider">
+
+  <form method="POST" autocomplete="on" id="reg-form">
+    <div class="form-group">
+      <label for="full_name">Full Name</label>
+      <input class="form-control" type="text" id="full_name" name="full_name"
+             placeholder="Your full name" autofocus autocomplete="name"
+             value="{{ request.form.get('full_name','') }}" required>
     </div>
+
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input class="form-control" type="text" id="username" name="username"
+             placeholder="Choose a username" autocomplete="username"
+             value="{{ request.form.get('username','') }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input class="form-control" type="email" id="email" name="email"
+             placeholder="you@example.com" autocomplete="email"
+             value="{{ request.form.get('email','') }}" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <div class="input-icon-wrap">
+        <input class="form-control" type="password" id="password" name="password"
+               placeholder="At least 8 characters" autocomplete="new-password" required>
+        <span class="icon" onclick="togglePassword('password',this)">&#128065;</span>
+      </div>
+      <div class="pw-strength"><div class="pw-strength-bar" id="pw-strength-bar"></div></div>
+      <span class="form-hint" id="pw-strength-label"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="confirm_password">Confirm Password</label>
+      <div class="input-icon-wrap">
+        <input class="form-control" type="password" id="confirm_password" name="confirm_password"
+               placeholder="Repeat your password" autocomplete="new-password" required>
+        <span class="icon" onclick="togglePassword('confirm_password',this)">&#128065;</span>
+      </div>
+      <span class="field-error" id="confirm-error">Passwords do not match</span>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" style="margin-top:.5rem;">
+      <i class="fas fa-user-plus"></i> Create Account
+    </button>
+  </form>
+
+  <div class="auth-footer">
+    Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+  </div>
 </div>
+
+<script>
+document.getElementById('reg-form').addEventListener('submit', function(e) {
+  const pw  = document.getElementById('password').value;
+  const cpw = document.getElementById('confirm_password').value;
+  const err = document.getElementById('confirm-error');
+  if (pw !== cpw) {
+    e.preventDefault();
+    err.classList.add('visible');
+    document.getElementById('confirm_password').classList.add('error');
+  } else {
+    err.classList.remove('visible');
+  }
+});
+</script>
 {% endblock %}

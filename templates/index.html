@@ -3,138 +3,175 @@
 {% block title %}Home - Portal{% endblock %}
 
 {% block content %}
-<div class="container">
-    {% if not current_user %}
-    <!-- Hero Section -->
-    <div class="row align-items-center mb-5">
-        <div class="col-lg-6">
-            <h1 class="display-4 fw-bold mb-4">Welcome to Portal</h1>
-            <p class="lead mb-4">A modern community platform where you can share your thoughts, connect with others, and discover amazing content.</p>
-            <div class="d-flex gap-3">
-                <a href="/register" class="btn btn-primary btn-lg">Get Started</a>
-                <a href="/about" class="btn btn-outline-primary btn-lg">Learn More</a>
-            </div>
-        </div>
-        <div class="col-lg-6 text-center">
-            <i class="fas fa-users fa-10x text-primary opacity-25"></i>
-        </div>
+
+<!-- ── HERO ── -->
+{% if not current_user %}
+<section class="hero">
+  <div style="position:relative;z-index:1;">
+    <p style="font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:.75rem;">
+      <i class="fas fa-hospital-alt"></i>&nbsp; Health Data Portal
+    </p>
+    <h1 class="fade-in">Welcome to <span style="opacity:.9;">Portal</span></h1>
+    <p class="fade-in delay-1">
+      A modern community platform for hospital reports, posts, and insights.
+      Join and collaborate with healthcare professionals.
+    </p>
+    <div class="hero-actions fade-in delay-2">
+      <a href="{{ url_for('register') }}" class="btn btn-lg" style="background:#fff;color:var(--primary);font-weight:800;">
+        <i class="fas fa-rocket"></i> Get Started Free
+      </a>
+      <a href="{{ url_for('about') }}" class="btn btn-lg btn-ghost">
+        <i class="fas fa-info-circle"></i> Learn More
+      </a>
     </div>
-    
-    <!-- Stats Section -->
-    <div class="row mb-5">
-        <div class="col-md-4 mb-3">
-            <div class="stat-card">
-                <div class="number">{{ stats.total_users }}</div>
-                <div class="label">Active Members</div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <div class="number">{{ stats.total_posts }}</div>
-                <div class="label">Posts Shared</div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <div class="number">{{ stats.total_likes }}</div>
-                <div class="label">Total Likes</div>
-            </div>
-        </div>
+  </div>
+</section>
+
+<!-- ── STATS BAR ── -->
+<section class="stats-bar">
+  <div class="stats-grid">
+    <div class="stat-item fade-in-up delay-1">
+      <div class="num" data-counter="true" data-target="{{ stats.total_users }}">{{ stats.total_users }}</div>
+      <div class="lbl"><i class="fas fa-users"></i> Members</div>
     </div>
-    {% else %}
-    <h2 class="mb-4">Welcome back, <strong>{{ current_user.username }}</strong>!</h2>
-    {% endif %}
-    
-    <!-- Posts Section -->
-    <div class="row">
-        <div class="col-lg-8">
-            <h3 class="mb-4">Latest Posts</h3>
-            {% if posts %}
-                {% for post in posts %}
-                <div class="card mb-4 fade-in">
-                    <div class="card-header bg-light border-bottom-0">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <a href="/profile/{{ post.author.username }}" class="text-decoration-none">
-                                    <img src="{{ post.author.get_avatar() }}" alt="{{ post.author.username }}" class="avatar me-2">
-                                    <strong>{{ post.author.full_name or post.author.username }}</strong>
-                                </a>
-                                <small class="text-muted d-block">@{{ post.author.username }}</small>
-                            </div>
-                            <small class="text-muted">{{ post.created_at.strftime('%b %d, %Y') }}</small>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <a href="/post/{{ post.id }}" class="text-decoration-none">
-                            <h5 class="card-title">{{ post.title }}</h5>
-                        </a>
-                        <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
-                    </div>
-                    <div class="card-footer bg-light border-top pt-3">
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">
-                                <i class="fas fa-eye"></i> {{ post.views }} views
-                            </span>
-                            <div>
-                                <button class="btn btn-sm btn-outline-danger like-btn" data-post-id="{{ post.id }}">
-                                    <i class="fas fa-heart"></i> {{ post.likes }}
-                                </button>
-                                <a href="/post/{{ post.id }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-comment"></i> Read More
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No posts yet. Be the first to create one!
-            </div>
-            {% endif %}
-        </div>
-        
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-info-circle"></i> About Portal</h5>
-                    <p>Portal is a community-driven platform for sharing ideas, experiences, and knowledge. Join our growing community today!</p>
-                    {% if not current_user %}
-                    <a href="/register" class="btn btn-primary w-100">Join Now</a>
-                    {% else %}
-                    <a href="/post/new" class="btn btn-primary w-100">Create a Post</a>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-star"></i> Features</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check text-success"></i> Create & share posts</li>
-                        <li class="mb-2"><i class="fas fa-check text-success"></i> User profiles</li>
-                        <li class="mb-2"><i class="fas fa-check text-success"></i> Like & comment</li>
-                        <li class="mb-2"><i class="fas fa-check text-success"></i> Public & private content</li>
-                        <li class="mb-2"><i class="fas fa-check text-success"></i> RESTful API</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <div class="stat-item fade-in-up delay-2">
+      <div class="num" data-counter="true" data-target="{{ stats.total_posts }}">{{ stats.total_posts }}</div>
+      <div class="lbl"><i class="fas fa-file-alt"></i> Posts</div>
     </div>
+    <div class="stat-item fade-in-up delay-3">
+      <div class="num" data-counter="true" data-target="{{ stats.total_likes }}">{{ stats.total_likes }}</div>
+      <div class="lbl"><i class="fas fa-heart"></i> Likes</div>
+    </div>
+  </div>
+</section>
+
+{% else %}
+<!-- Logged-in welcome banner -->
+<div style="background:var(--gradient);color:#fff;padding:1.75rem 1.5rem;">
+  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <img src="{{ current_user.get_avatar() }}" style="width:52px;height:52px;border-radius:50%;border:3px solid rgba(255,255,255,.5);">
+    <div>
+      <div style="font-size:1.2rem;font-weight:800;">Welcome back, {{ current_user.full_name or current_user.username }}!</div>
+      <div style="opacity:.8;font-size:.85rem;">Member since {{ current_user.created_at.strftime('%B %Y') }}</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:.75rem;flex-wrap:wrap;">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-ghost btn-sm"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      <a href="{{ url_for('new_post') }}" class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border-color:transparent;"><i class="fas fa-pen"></i> New Post</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── MAIN CONTENT ── -->
+<div class="page-wrapper">
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start;" class="main-grid">
+
+    <!-- Posts feed -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+        <h3 style="font-size:1.1rem;font-weight:800;"><i class="fas fa-fire" style="color:#f6ad55;"></i> Latest Posts</h3>
+        {% if current_user %}
+        <a href="{{ url_for('new_post') }}" class="btn btn-primary btn-sm"><i class="fas fa-pen"></i> Write Post</a>
+        {% endif %}
+      </div>
+
+      {% if posts %}
+        {% for post in posts %}
+        <article class="post-card fade-in-up" style="animation-delay:{{ loop.index0 * 0.07 }}s;">
+          <div class="post-header">
+            <div class="post-author">
+              <a href="{{ url_for('profile', username=post.author.username) }}">
+                <img src="{{ post.author.get_avatar() }}" alt="{{ post.author.username }}">
+              </a>
+              <div>
+                <div class="name">
+                  <a href="{{ url_for('profile', username=post.author.username) }}" style="color:inherit;">
+                    {{ post.author.full_name or post.author.username }}
+                  </a>
+                </div>
+                <div class="handle">@{{ post.author.username }}</div>
+              </div>
+            </div>
+            <small style="color:var(--text-muted);font-size:.78rem;">
+              <i class="fas fa-calendar-alt"></i> {{ post.created_at.strftime('%b %d, %Y') }}
+            </small>
+          </div>
+          <div class="post-body">
+            <h5><a href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a></h5>
+            <p>{{ post.content[:220] }}{% if post.content|length > 220 %}…{% endif %}</p>
+          </div>
+          <div class="post-footer">
+            <div class="post-meta">
+              <span><i class="fas fa-eye"></i> {{ post.views }}</span>
+              <span><i class="fas fa-heart"></i> {{ post.likes }}</span>
+            </div>
+            <div style="display:flex;gap:.5rem;">
+              <button class="like-btn" data-post-id="{{ post.id }}" title="Like">
+                <i class="fas fa-heart"></i>
+                <span class="like-count">{{ post.likes }}</span>
+              </button>
+              <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline btn-sm">
+                Read <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon"><i class="fas fa-file-alt"></i></div>
+        <h4>No posts yet</h4>
+        <p style="margin-top:.5rem;font-size:.88rem;">Be the first to write something!</p>
+        {% if current_user %}
+        <a href="{{ url_for('new_post') }}" class="btn btn-primary" style="margin-top:1rem;"><i class="fas fa-pen"></i> Create Post</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <aside>
+      {% if not current_user %}
+      <div class="sidebar-widget fade-in-up delay-1">
+        <div class="widget-header"><i class="fas fa-door-open"></i> Join Today</div>
+        <div class="widget-body">
+          <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:1rem;">Create a free account to submit reports and share posts.</p>
+          <a href="{{ url_for('register') }}" class="btn btn-primary btn-block" style="margin-bottom:.65rem;"><i class="fas fa-user-plus"></i> Register Free</a>
+          <a href="{{ url_for('login') }}" class="btn btn-outline btn-block"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="sidebar-widget fade-in-up delay-1">
+        <div class="widget-header"><i class="fas fa-bolt"></i> Quick Actions</div>
+        <div class="widget-body" style="display:flex;flex-direction:column;gap:.65rem;">
+          <a href="{{ url_for('new_hospital_report') }}" class="btn btn-primary btn-sm btn-block"><i class="fas fa-plus-circle"></i> New Hospital Report</a>
+          <a href="{{ url_for('hospital_reports_list') }}" class="btn btn-outline btn-sm btn-block"><i class="fas fa-list-alt"></i> My Reports</a>
+          <a href="{{ url_for('new_post') }}" class="btn btn-outline btn-sm btn-block"><i class="fas fa-pen"></i> Write a Post</a>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="sidebar-widget fade-in-up delay-2">
+        <div class="widget-header"><i class="fas fa-star"></i> Features</div>
+        <div class="widget-body">
+          <ul style="list-style:none;font-size:.87rem;line-height:2;">
+            <li><i class="fas fa-check-circle" style="color:#48bb78;margin-right:.5rem;"></i> Hospital Reports</li>
+            <li><i class="fas fa-check-circle" style="color:#48bb78;margin-right:.5rem;"></i> Community Posts</li>
+            <li><i class="fas fa-check-circle" style="color:#48bb78;margin-right:.5rem;"></i> User Profiles</li>
+            <li><i class="fas fa-check-circle" style="color:#48bb78;margin-right:.5rem;"></i> Admin Dashboard</li>
+            <li><i class="fas fa-check-circle" style="color:#48bb78;margin-right:.5rem;"></i> REST API</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+  </div>
 </div>
 
-<script>
-document.querySelectorAll('.like-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const postId = btn.dataset.postId;
-        const response = await fetch(`/post/${postId}/like`, { method: 'POST' });
-        const data = await response.json();
-        if (data.success) {
-            btn.innerHTML = `<i class="fas fa-heart"></i> ${data.likes}`;
-        }
-    });
-});
-</script>
+<style>
+@media (max-width: 768px) {
+  .main-grid { grid-template-columns: 1fr !important; }
+  aside { display: none; }
+}
+</style>
 {% endblock %}

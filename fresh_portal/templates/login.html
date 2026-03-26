@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Login | Fresh Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Login</h1>
+  <form method="post" class="form-grid">
+    <label>Username
+      <input type="text" name="username" required autofocus>
+    </label>
+    <label>Password
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit">Login</button>
+  </form>
+  <p class="helper">No account? <a href="{{ url_for('register') }}">Create one</a></p>
+</section>
+{% endblock %}

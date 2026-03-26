@@ -5,8 +5,6 @@
   <h2>Admin Dashboard</h2>
   <p>Welcome {{ admin.username }}. Track users and all submitted reports.</p>
   <div class="cta-row">
-    <a class="btn primary" href="{{ url_for('admin_reports_export') }}">Export CSV</a>
-    <a class="btn ghost" href="{{ url_for('admin_morbidity_reports_export') }}">Export Morbidity CSV</a>
     <a class="btn ghost" href="{{ url_for('admin_cbhi_reports_export') }}">Export CBHI CSV</a>
     <a class="btn ghost" href="{{ url_for('admin_ncd_reports_export') }}">Export CBHI Form-2 CSV</a>
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports') }}">Consolidated Reports</a>
@@ -18,8 +16,6 @@
   <h3 class="section-title">Consolidated Module Views</h3>
   <div class="cta-row">
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='all') }}">All Modules</a>
-    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='hp') }}">HP Indicator</a>
-    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='morbidity') }}">Morbidity</a>
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='cbhi1') }}">CBHI Form-1</a>
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='cbhi2') }}">CBHI Form-2</a>
   </div>
@@ -34,14 +30,6 @@
       <p>{{ stats.total_reports }}</p>
     </article>
     <article>
-      <h3>Hospital Reports</h3>
-      <p>{{ stats.total_hospital_reports }}</p>
-    </article>
-    <article>
-      <h3>Morbidity Reports</h3>
-      <p>{{ stats.total_morbidity_reports }}</p>
-    </article>
-    <article>
       <h3>CBHI Reports</h3>
       <p>{{ stats.total_cbhi_reports }}</p>
     </article>
@@ -49,78 +37,7 @@
       <h3>CBHI Form-2 Reports</h3>
       <p>{{ stats.total_ncd_reports }}</p>
     </article>
-    <article>
-      <h3>Total Outpatients</h3>
-      <p>{{ stats.total_outpatients }}</p>
-    </article>
   </div>
-
-  <h3 class="section-title">Recent HP Reports</h3>
-  {% if reports %}
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Hospital</th>
-          <th>Owner</th>
-          <th>Month</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for report in reports[:10] %}
-          <tr>
-            <td>{{ report.hospital_name }}</td>
-            <td>{{ report.owner.username }}</td>
-            <td>{{ report.month_year }}</td>
-            <td>
-              <a href="{{ url_for('admin_report_view', report_id=report.id) }}">Open</a>
-              <span class="action-sep">|</span>
-              <a href="{{ url_for('admin_report_edit', report_id=report.id) }}">Edit</a>
-              <span class="action-sep">|</span>
-              <form class="inline-form" method="post" action="{{ url_for('admin_report_delete', report_id=report.id) }}" onsubmit="return confirm('Delete this report?');">
-                <button class="link-btn danger" type="submit">Delete</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No reports submitted yet.</p>
-  {% endif %}
-
-  <h3 class="section-title">Recent Morbidity Reports</h3>
-  {% if morbidity_reports %}
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Institution</th>
-          <th>Owner</th>
-          <th>Month</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for report in morbidity_reports[:10] %}
-          <tr>
-            <td>{{ report.health_institution_name }}</td>
-            <td>{{ report.morbidity_owner.username }}</td>
-            <td>{{ report.month_year }}</td>
-            <td>
-              <a href="{{ url_for('admin_morbidity_report_view', report_id=report.id) }}">Open</a>
-              <span class="action-sep">|</span>
-              <form class="inline-form" method="post" action="{{ url_for('admin_morbidity_report_delete', report_id=report.id) }}" onsubmit="return confirm('Delete this morbidity report?');">
-                <button class="link-btn danger" type="submit">Delete</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>No morbidity reports submitted yet.</p>
-  {% endif %}
-
   <h3 class="section-title">Recent CBHI Form-1 Reports</h3>
   {% if cbhi_reports %}
     <table class="table">

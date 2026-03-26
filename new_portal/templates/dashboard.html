@@ -3,12 +3,8 @@
 {% block content %}
 <section class="card">
   <h2>Welcome, {{ user.username }}</h2>
-  <p>Your account is active. Submit and review HP indicator, morbidity, CBHI Form-1, and CBHI Form-2 reports here.</p>
+  <p>Your account is active. Submit and review CBHI Form-1 and CBHI Form-2 reports here.</p>
   <div class="cta-row">
-    <a class="btn primary" href="{{ url_for('new_hospital_report') }}">New HP Report</a>
-    <a class="btn ghost" href="{{ url_for('hospital_reports') }}">HP Reports</a>
-    <a class="btn primary" href="{{ url_for('new_morbidity_report') }}">New Morbidity Report</a>
-    <a class="btn ghost" href="{{ url_for('morbidity_reports') }}">Morbidity Reports</a>
     <a class="btn primary" href="{{ url_for('new_cbhi_report') }}">New CBHI Form-1</a>
     <a class="btn ghost" href="{{ url_for('cbhi_reports') }}">CBHI Form-1 Reports</a>
     <a class="btn primary" href="{{ url_for('new_ncd_report') }}">New CBHI Form-2</a>
@@ -21,14 +17,6 @@
       <p>{{ user.email }}</p>
     </article>
     <article>
-      <h3>HP Reports</h3>
-      <p>{{ reports|length }}</p>
-    </article>
-    <article>
-      <h3>Morbidity Reports</h3>
-      <p>{{ morbidity_reports|length }}</p>
-    </article>
-    <article>
       <h3>CBHI Reports</h3>
       <p>{{ cbhi_reports|length }}</p>
     </article>
@@ -37,56 +25,6 @@
       <p>{{ ncd_reports|length }}</p>
     </article>
   </div>
-
-  {% if reports %}
-    <h3 class="section-title">Latest HP Reports</h3>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Hospital</th>
-          <th>District</th>
-          <th>Month</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for report in reports[:5] %}
-          <tr>
-            <td>{{ report.hospital_name }}</td>
-            <td>{{ report.district }}</td>
-            <td>{{ report.month_year }}</td>
-            <td><a href="{{ url_for('hospital_report_view', report_id=report.id) }}">Open</a></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
-
-  {% if morbidity_reports %}
-    <h3 class="section-title">Latest Morbidity Reports</h3>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Institution</th>
-          <th>Month</th>
-          <th>OPD Total</th>
-          <th>IPD Total</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in morbidity_summaries %}
-          <tr>
-            <td>{{ item.report.health_institution_name }}</td>
-            <td>{{ item.report.month_year }}</td>
-            <td>{{ item.total_opd }}</td>
-            <td>{{ item.total_ipd }}</td>
-            <td><a href="{{ url_for('morbidity_report_view', report_id=item.report.id) }}">Open</a></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
 
   {% if cbhi_reports %}
     <h3 class="section-title">Latest CBHI Form-1 Reports</h3>

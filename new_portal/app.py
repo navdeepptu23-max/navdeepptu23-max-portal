@@ -35,8 +35,6 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    reports = db.relationship("HospitalReport", backref="owner", lazy=True, cascade="all, delete-orphan")
-    morbidity_reports = db.relationship("MorbidityReport", backref="morbidity_owner", lazy=True, cascade="all, delete-orphan")
     cbhi_reports = db.relationship("CbhiReport", backref="cbhi_owner", lazy=True, cascade="all, delete-orphan")
     ncd_reports = db.relationship("NcdReport", backref="ncd_owner", lazy=True, cascade="all, delete-orphan")
 
@@ -47,154 +45,9 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 
-class HospitalReport(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    hospital_name = db.Column(db.String(255), nullable=False)
-    district = db.Column(db.String(100), nullable=False)
-    month_year = db.Column(db.String(20), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    notes = db.Column(db.Text, default="")
-
-    # OUTPATIENTS — New
-    op_new_male = db.Column(db.Integer, default=0)
-    op_new_female = db.Column(db.Integer, default=0)
-    op_new_male_child = db.Column(db.Integer, default=0)
-    op_new_female_child = db.Column(db.Integer, default=0)
-    # OUTPATIENTS — Old
-    op_old_male = db.Column(db.Integer, default=0)
-    op_old_female = db.Column(db.Integer, default=0)
-    op_old_male_child = db.Column(db.Integer, default=0)
-    op_old_female_child = db.Column(db.Integer, default=0)
-    # OUTPATIENTS — Emergency
-    op_emer_male = db.Column(db.Integer, default=0)
-    op_emer_female = db.Column(db.Integer, default=0)
-    op_emer_male_child = db.Column(db.Integer, default=0)
-    op_emer_female_child = db.Column(db.Integer, default=0)
-
-    # Admissions during the month
-    adm_male = db.Column(db.Integer, default=0)
-    adm_female = db.Column(db.Integer, default=0)
-    adm_male_child = db.Column(db.Integer, default=0)
-    adm_female_child = db.Column(db.Integer, default=0)
-    # Admissions through emergency
-    adm_emer_male = db.Column(db.Integer, default=0)
-    adm_emer_female = db.Column(db.Integer, default=0)
-    adm_emer_male_child = db.Column(db.Integer, default=0)
-    adm_emer_female_child = db.Column(db.Integer, default=0)
-    # Medical legal cases admitted
-    mlc_male = db.Column(db.Integer, default=0)
-    mlc_female = db.Column(db.Integer, default=0)
-    mlc_male_child = db.Column(db.Integer, default=0)
-    mlc_female_child = db.Column(db.Integer, default=0)
-    # Admitted & discharged same day
-    sdd_male = db.Column(db.Integer, default=0)
-    sdd_female = db.Column(db.Integer, default=0)
-    sdd_male_child = db.Column(db.Integer, default=0)
-    sdd_female_child = db.Column(db.Integer, default=0)
-
-    # Tubectomies (incl. laparoscopic)
-    tubec_male = db.Column(db.Integer, default=0)
-    tubec_female = db.Column(db.Integer, default=0)
-    tubec_male_child = db.Column(db.Integer, default=0)
-    tubec_female_child = db.Column(db.Integer, default=0)
-    # Vasectomies
-    vasec_male = db.Column(db.Integer, default=0)
-    vasec_female = db.Column(db.Integer, default=0)
-    vasec_male_child = db.Column(db.Integer, default=0)
-    vasec_female_child = db.Column(db.Integer, default=0)
-    # Minor surgeries (exc. vasectomies)
-    minor_surg_male = db.Column(db.Integer, default=0)
-    minor_surg_female = db.Column(db.Integer, default=0)
-    minor_surg_male_child = db.Column(db.Integer, default=0)
-    minor_surg_female_child = db.Column(db.Integer, default=0)
-    # Major surgeries (exc. tubectomies)
-    major_surg_male = db.Column(db.Integer, default=0)
-    major_surg_female = db.Column(db.Integer, default=0)
-    major_surg_male_child = db.Column(db.Integer, default=0)
-    major_surg_female_child = db.Column(db.Integer, default=0)
-
-    # Deaths
-    deaths_male = db.Column(db.Integer, default=0)
-    deaths_female = db.Column(db.Integer, default=0)
-    deaths_male_child = db.Column(db.Integer, default=0)
-    deaths_female_child = db.Column(db.Integer, default=0)
-
-    # Deliveries (single values — not split by gender)
-    normal_deliveries = db.Column(db.Integer, default=0)
-    caesarean_deliveries = db.Column(db.Integer, default=0)
-    # Children born (excluding stillbirth, referenced from deliveries)
-    male_children = db.Column(db.Integer, default=0)
-    female_children = db.Column(db.Integer, default=0)
-
-    # Aggregate / other stats
-    lab_tests = db.Column(db.Integer, default=0)
-    cumulative_inpatient_days = db.Column(db.Integer, default=0)
-    user_charges_collection = db.Column(db.Integer, default=0)
-    rsby_cases = db.Column(db.Integer, default=0)
 
 
-MORBIDITY_DISEASES = [
-    ("2", "Typhoid Fever and Paratyphoid Fever"),
-    ("5", "Amoebiasis"),
-    ("6", "Diarrhoea"),
-    ("8", "Respiratory TB"),
-    ("10", "T.B of other organ"),
-    ("29", "Measles"),
-    ("31", "Other Viral Hepatitis"),
-    ("32", "HIV"),
-    ("37", "Helminthiasis"),
-    ("79", "Other Anaemia"),
-    ("85", "Disorders of thyroid glands"),
-    ("86", "Diabetes Mellitus"),
-    ("89", "Mental and behavioural Disorder"),
-    ("98", "Diseases of eye"),
-    ("99", "Diseases of the ear"),
-    ("102", "Hypertensive Heart Disease"),
-    ("103", "All other hypertensive diseases"),
-    ("114", "Pharyngitis & Tonsillitis"),
-    ("116", "Other Acute Upper Respiratory Infections"),
-    ("118", "Acute Bronchitis"),
-    ("119", "Ch. Bronchitis and unspecified Emphysema"),
-    ("120", "Asthma"),
-    ("121", "Other lower respiratory disorders"),
-    ("126", "Diseases of Oral Cavity"),
-    ("127", "Gastric and Duodenal ulcer"),
-    ("128", "Gastritis & Duodenitis"),
-    ("134", "Cholelithiasis and Cholecystitis"),
-    ("136", "Other Diseases other part of Digestive system"),
-    ("137", "Infections of skin"),
-    ("138", "All other disease of Skin"),
-    ("139", "Rheumatoid Arthritis & other inflammatory Polyarthropathies"),
-    ("147", "Other diseases of Urinary Track"),
-    ("149", "All other Diseases of male genital organs"),
-    ("151", "All other diseases of female genital organs"),
-    ("152", "Spontaneous Abortion"),
-    ("155", "Oedema/ Proteinuria & Hypertension Disorder in Pregnancy/childbirth & puerperium"),
-    ("157", "Obstructed Labour"),
-    ("158", "Complication predominantly related to puerperium"),
-    ("161", "All other obstetric conditions not elsewhere classified"),
-    ("172", "Abdominal and Pelvic pain"),
-    ("175", "Fever of Unknown origin (PUO)"),
-    ("180", "All other Symptoms, Signs & abnormal clinical / lab findings not elsewhere classified"),
-    ("186", "Dislocations, sprains & Stains of body regions"),
-    ("189", "Other injuries"),
-    ("191", "Burns & Corrosions"),
-    ("192", "Poisoning by drugs & Biological substances and toxic effect of substances"),
-    ("193", "Other specified effects of external causes & certain early complications of trauma"),
-    ("198", "Other Road Side Accidents (RSA)"),
-    ("215", "Bites of snake & other Venomous animals / DOG BITE"),
-]
 
-
-class MorbidityReport(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    health_institution_name = db.Column(db.String(255), nullable=False)
-    month_year = db.Column(db.String(20), nullable=False)
-    entries_json = db.Column(db.Text, default="{}")
-    notes = db.Column(db.Text, default="")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
 COMMUNICABLE_DISEASES = [
@@ -656,160 +509,10 @@ def create_ncd_excel(report, rows, totals):
     return output
 
 
-def build_morbidity_payload(form_source):
-    payload = {}
-    for sr_no, _ in MORBIDITY_DISEASES:
-        opd = form_source.get(f"morbidity_{sr_no}_opd", 0, type=int)
-        ipd = form_source.get(f"morbidity_{sr_no}_ipd", 0, type=int)
-        payload[sr_no] = {"opd": opd, "ipd": ipd}
-    return payload
-
-
-def morbidity_rows(report):
-    data = json.loads(report.entries_json or "{}")
-    rows = []
-    total_opd = 0
-    total_ipd = 0
-
-    for sr_no, disease_name in MORBIDITY_DISEASES:
-        values = data.get(sr_no, {})
-        opd = int(values.get("opd", 0) or 0)
-        ipd = int(values.get("ipd", 0) or 0)
-        rows.append({
-            "sr_no": sr_no,
-            "disease_name": disease_name,
-            "opd": opd,
-            "ipd": ipd,
-        })
-        total_opd += opd
-        total_ipd += ipd
-
-    return rows, total_opd, total_ipd
-
-
-def total_hospital_outpatients(report):
-    return (
-        (report.op_new_male or 0) + (report.op_new_female or 0) + (report.op_new_male_child or 0) + (report.op_new_female_child or 0)
-        + (report.op_old_male or 0) + (report.op_old_female or 0) + (report.op_old_male_child or 0) + (report.op_old_female_child or 0)
-        + (report.op_emer_male or 0) + (report.op_emer_female or 0) + (report.op_emer_male_child or 0) + (report.op_emer_female_child or 0)
-    )
-
-
-def total_hospital_admissions(report):
-    return (report.adm_male or 0) + (report.adm_female or 0) + (report.adm_male_child or 0) + (report.adm_female_child or 0)
-
-
-def create_morbidity_excel(report, rows, total_opd, total_ipd):
-    from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
-
-    workbook = Workbook()
-    sheet = workbook.active
-    sheet.title = "Morbidity Report"
-
-    border = Border(
-        left=Side(style="thin"),
-        right=Side(style="thin"),
-        top=Side(style="thin"),
-        bottom=Side(style="thin"),
-    )
-    header_fill = PatternFill("solid", fgColor="D9D9D9")
-    title_font = Font(bold=True, size=12)
-    bold_font = Font(bold=True)
-
-    sheet.merge_cells("A1:D1")
-    sheet["A1"] = "PROFORMA II"
-    sheet["A1"].font = title_font
-    sheet["A1"].alignment = Alignment(horizontal="center")
-
-    sheet.merge_cells("A2:D2")
-    sheet["A2"] = "MORBIDITY AND MORTALITY REPORT"
-    sheet["A2"].font = title_font
-    sheet["A2"].alignment = Alignment(horizontal="center")
-
-    sheet["A3"] = f"Name of the Health Institution: {report.health_institution_name}"
-    sheet["C3"] = f"Month & Year: {report.month_year}"
-    sheet["A3"].font = bold_font
-    sheet["C3"].font = bold_font
-
-    headers = ["Sr. No.", "Name of the disease", "OPD", "IPD"]
-    for column, value in enumerate(headers, start=1):
-        cell = sheet.cell(row=4, column=column, value=value)
-        cell.font = bold_font
-        cell.fill = header_fill
-        cell.border = border
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    row_index = 5
-    for row in rows:
-        values = [row["sr_no"], row["disease_name"], row["opd"], row["ipd"]]
-        for column, value in enumerate(values, start=1):
-            cell = sheet.cell(row=row_index, column=column, value=value)
-            cell.border = border
-            cell.alignment = Alignment(horizontal="left" if column == 2 else "center", vertical="center", wrap_text=True)
-        row_index += 1
-
-    total_values = ["", "Total", total_opd, total_ipd]
-    for column, value in enumerate(total_values, start=1):
-        cell = sheet.cell(row=row_index, column=column, value=value)
-        cell.font = bold_font
-        cell.border = border
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    sheet.column_dimensions["A"].width = 10
-    sheet.column_dimensions["B"].width = 58
-    sheet.column_dimensions["C"].width = 14
-    sheet.column_dimensions["D"].width = 14
-
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    return output
-
-
-def build_consolidated_rows(hospital_reports, morbidity_reports, cbhi_reports=None, ncd_reports=None, include_owner=False):
+def build_consolidated_rows(cbhi_reports=None, ncd_reports=None, include_owner=False):
     rows = []
     cbhi_reports = cbhi_reports or []
     ncd_reports = ncd_reports or []
-
-    for report in hospital_reports:
-        row = {
-            "report_type": "HP Indicator",
-            "institution": report.hospital_name,
-            "district": report.district,
-            "month_year": report.month_year,
-            "metric_one_label": "Outpatients",
-            "metric_one": total_hospital_outpatients(report),
-            "metric_two_label": "Admissions",
-            "metric_two": total_hospital_admissions(report),
-            "created_at": report.created_at,
-            "view_url": url_for("hospital_report_view", report_id=report.id),
-        }
-        if include_owner:
-            row["owner_username"] = report.owner.username
-            row["owner_email"] = report.owner.email
-            row["view_url"] = url_for("admin_report_view", report_id=report.id)
-        rows.append(row)
-
-    for report in morbidity_reports:
-        _, total_opd, total_ipd = morbidity_rows(report)
-        row = {
-            "report_type": "Morbidity",
-            "institution": report.health_institution_name,
-            "district": "-",
-            "month_year": report.month_year,
-            "metric_one_label": "OPD",
-            "metric_one": total_opd,
-            "metric_two_label": "IPD",
-            "metric_two": total_ipd,
-            "created_at": report.created_at,
-            "view_url": url_for("morbidity_report_view", report_id=report.id),
-        }
-        if include_owner:
-            row["owner_username"] = report.morbidity_owner.username
-            row["owner_email"] = report.morbidity_owner.email
-            row["view_url"] = url_for("admin_morbidity_report_view", report_id=report.id)
-        rows.append(row)
 
     for report in cbhi_reports:
         _, totals = cbhi_rows(report)
@@ -857,8 +560,6 @@ def build_consolidated_rows(hospital_reports, morbidity_reports, cbhi_reports=No
 
 CONSOLIDATED_MODULE_LABELS = {
     "all": "All Modules",
-    "hp": "HP Indicator",
-    "morbidity": "Morbidity",
     "cbhi1": "CBHI Form-1",
     "cbhi2": "CBHI Form-2",
 }
@@ -994,6 +695,20 @@ def current_admin():
     return None
 
 
+def find_user_by_credential(credential: str):
+    """Find user by username, email, or numeric user ID."""
+    credential = (credential or "").strip()
+    if not credential:
+        return None
+
+    user = User.query.filter(func.lower(User.username) == credential.lower()).first()
+    if not user and "@" in credential:
+        user = User.query.filter(func.lower(User.email) == credential.lower()).first()
+    if not user and credential.isdigit():
+        user = User.query.get(int(credential))
+    return user
+
+
 @app.route("/")
 def index():
     return render_template("index.html", user=current_user())
@@ -1039,11 +754,7 @@ def login():
         credential = request.form.get("username", "").strip()
         password = request.form.get("password", "")
 
-        user = None
-        if credential:
-            user = User.query.filter(func.lower(User.username) == credential.lower()).first()
-            if not user and "@" in credential:
-                user = User.query.filter(func.lower(User.email) == credential.lower()).first()
+        user = find_user_by_credential(credential)
         if user and user.check_password(password):
             if not user.is_active:
                 flash("Your account is inactive. Contact admin.", "danger")
@@ -1052,7 +763,7 @@ def login():
             flash(f"Welcome back, {user.username}.", "success")
             return redirect(url_for("dashboard"))
 
-        flash("Invalid username or password.", "danger")
+        flash("Invalid username/email/user ID or password.", "danger")
         return redirect(url_for("login"))
 
     return render_template("login.html", user=current_user())
@@ -1095,18 +806,8 @@ def forgot_password():
 @login_required
 def dashboard():
     user = current_user()
-    reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    morbidity_summaries = []
-    for report in morbidity_reports[:5]:
-        _, total_opd, total_ipd = morbidity_rows(report)
-        morbidity_summaries.append({
-            "report": report,
-            "total_opd": total_opd,
-            "total_ipd": total_ipd,
-        })
 
     cbhi_summaries = []
     for report in cbhi_reports[:5]:
@@ -1129,9 +830,6 @@ def dashboard():
     return render_template(
         "dashboard.html",
         user=user,
-        reports=reports,
-        morbidity_reports=morbidity_reports,
-        morbidity_summaries=morbidity_summaries,
         cbhi_reports=cbhi_reports,
         cbhi_summaries=cbhi_summaries,
         ncd_reports=ncd_reports,
@@ -1144,238 +842,6 @@ def logout():
     session.clear()
     flash("Logged out successfully.", "info")
     return redirect(url_for("index"))
-
-
-@app.route("/hospital/report/new", methods=["GET", "POST"])
-@login_required
-def new_hospital_report():
-    user = current_user()
-    if request.method == "POST":
-        hospital_name = request.form.get("hospital_name", "").strip()
-        district = request.form.get("district", "").strip()
-        month_year = request.form.get("month_year", "").strip()
-
-        if not all([hospital_name, district, month_year]):
-            flash("Hospital name, district, and month/year are required.", "danger")
-            return redirect(url_for("new_hospital_report"))
-
-        def fi(name):
-            return request.form.get(name, 0, type=int)
-
-        report = HospitalReport(
-            user_id=user.id,
-            hospital_name=hospital_name,
-            district=district,
-            month_year=month_year,
-            op_new_male=fi("op_new_male"), op_new_female=fi("op_new_female"),
-            op_new_male_child=fi("op_new_male_child"), op_new_female_child=fi("op_new_female_child"),
-            op_old_male=fi("op_old_male"), op_old_female=fi("op_old_female"),
-            op_old_male_child=fi("op_old_male_child"), op_old_female_child=fi("op_old_female_child"),
-            op_emer_male=fi("op_emer_male"), op_emer_female=fi("op_emer_female"),
-            op_emer_male_child=fi("op_emer_male_child"), op_emer_female_child=fi("op_emer_female_child"),
-            adm_male=fi("adm_male"), adm_female=fi("adm_female"),
-            adm_male_child=fi("adm_male_child"), adm_female_child=fi("adm_female_child"),
-            adm_emer_male=fi("adm_emer_male"), adm_emer_female=fi("adm_emer_female"),
-            adm_emer_male_child=fi("adm_emer_male_child"), adm_emer_female_child=fi("adm_emer_female_child"),
-            mlc_male=fi("mlc_male"), mlc_female=fi("mlc_female"),
-            mlc_male_child=fi("mlc_male_child"), mlc_female_child=fi("mlc_female_child"),
-            sdd_male=fi("sdd_male"), sdd_female=fi("sdd_female"),
-            sdd_male_child=fi("sdd_male_child"), sdd_female_child=fi("sdd_female_child"),
-            tubec_male=fi("tubec_male"), tubec_female=fi("tubec_female"),
-            tubec_male_child=fi("tubec_male_child"), tubec_female_child=fi("tubec_female_child"),
-            vasec_male=fi("vasec_male"), vasec_female=fi("vasec_female"),
-            vasec_male_child=fi("vasec_male_child"), vasec_female_child=fi("vasec_female_child"),
-            minor_surg_male=fi("minor_surg_male"), minor_surg_female=fi("minor_surg_female"),
-            minor_surg_male_child=fi("minor_surg_male_child"), minor_surg_female_child=fi("minor_surg_female_child"),
-            major_surg_male=fi("major_surg_male"), major_surg_female=fi("major_surg_female"),
-            major_surg_male_child=fi("major_surg_male_child"), major_surg_female_child=fi("major_surg_female_child"),
-            deaths_male=fi("deaths_male"), deaths_female=fi("deaths_female"),
-            deaths_male_child=fi("deaths_male_child"), deaths_female_child=fi("deaths_female_child"),
-            normal_deliveries=fi("normal_deliveries"), caesarean_deliveries=fi("caesarean_deliveries"),
-            male_children=fi("male_children"), female_children=fi("female_children"),
-            lab_tests=fi("lab_tests"), cumulative_inpatient_days=fi("cumulative_inpatient_days"),
-            user_charges_collection=fi("user_charges_collection"), rsby_cases=fi("rsby_cases"),
-            notes=request.form.get("notes", "").strip(),
-        )
-        db.session.add(report)
-        db.session.commit()
-
-        flash("Hospital report submitted.", "success")
-        return redirect(url_for("hospital_reports"))
-
-    return render_template("hospital_report_form.html", user=user)
-
-
-@app.route("/hospital/reports")
-@login_required
-def hospital_reports():
-    user = current_user()
-    reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
-    return render_template("hospital_reports.html", user=user, reports=reports)
-
-
-@app.route("/hospital/report/<int:report_id>/edit", methods=["GET", "POST"])
-@login_required
-def hospital_report_edit(report_id):
-    user = current_user()
-    report = HospitalReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission to edit this report.", "danger")
-        return redirect(url_for("hospital_reports"))
-
-    if request.method == "POST":
-        report.hospital_name = request.form.get("hospital_name", "").strip()
-        report.district = request.form.get("district", "").strip()
-        report.month_year = request.form.get("month_year", "").strip()
-
-        if not all([report.hospital_name, report.district, report.month_year]):
-            flash("Hospital name, district, and month/year are required.", "danger")
-            return redirect(url_for("hospital_report_edit", report_id=report.id))
-
-        def fi(name):
-            return request.form.get(name, 0, type=int)
-
-        report.op_new_male = fi("op_new_male"); report.op_new_female = fi("op_new_female")
-        report.op_new_male_child = fi("op_new_male_child"); report.op_new_female_child = fi("op_new_female_child")
-        report.op_old_male = fi("op_old_male"); report.op_old_female = fi("op_old_female")
-        report.op_old_male_child = fi("op_old_male_child"); report.op_old_female_child = fi("op_old_female_child")
-        report.op_emer_male = fi("op_emer_male"); report.op_emer_female = fi("op_emer_female")
-        report.op_emer_male_child = fi("op_emer_male_child"); report.op_emer_female_child = fi("op_emer_female_child")
-        report.adm_male = fi("adm_male"); report.adm_female = fi("adm_female")
-        report.adm_male_child = fi("adm_male_child"); report.adm_female_child = fi("adm_female_child")
-        report.adm_emer_male = fi("adm_emer_male"); report.adm_emer_female = fi("adm_emer_female")
-        report.adm_emer_male_child = fi("adm_emer_male_child"); report.adm_emer_female_child = fi("adm_emer_female_child")
-        report.mlc_male = fi("mlc_male"); report.mlc_female = fi("mlc_female")
-        report.mlc_male_child = fi("mlc_male_child"); report.mlc_female_child = fi("mlc_female_child")
-        report.sdd_male = fi("sdd_male"); report.sdd_female = fi("sdd_female")
-        report.sdd_male_child = fi("sdd_male_child"); report.sdd_female_child = fi("sdd_female_child")
-        report.tubec_male = fi("tubec_male"); report.tubec_female = fi("tubec_female")
-        report.tubec_male_child = fi("tubec_male_child"); report.tubec_female_child = fi("tubec_female_child")
-        report.vasec_male = fi("vasec_male"); report.vasec_female = fi("vasec_female")
-        report.vasec_male_child = fi("vasec_male_child"); report.vasec_female_child = fi("vasec_female_child")
-        report.minor_surg_male = fi("minor_surg_male"); report.minor_surg_female = fi("minor_surg_female")
-        report.minor_surg_male_child = fi("minor_surg_male_child"); report.minor_surg_female_child = fi("minor_surg_female_child")
-        report.major_surg_male = fi("major_surg_male"); report.major_surg_female = fi("major_surg_female")
-        report.major_surg_male_child = fi("major_surg_male_child"); report.major_surg_female_child = fi("major_surg_female_child")
-        report.deaths_male = fi("deaths_male"); report.deaths_female = fi("deaths_female")
-        report.deaths_male_child = fi("deaths_male_child"); report.deaths_female_child = fi("deaths_female_child")
-        report.normal_deliveries = fi("normal_deliveries"); report.caesarean_deliveries = fi("caesarean_deliveries")
-        report.male_children = fi("male_children"); report.female_children = fi("female_children")
-        report.lab_tests = fi("lab_tests"); report.cumulative_inpatient_days = fi("cumulative_inpatient_days")
-        report.user_charges_collection = fi("user_charges_collection"); report.rsby_cases = fi("rsby_cases")
-        report.notes = request.form.get("notes", "").strip()
-
-        db.session.commit()
-        flash("Hospital report updated.", "success")
-        return redirect(url_for("hospital_report_view", report_id=report.id))
-
-    initial_data = {
-        "op_new_male": report.op_new_male, "op_new_female": report.op_new_female,
-        "op_new_male_child": report.op_new_male_child, "op_new_female_child": report.op_new_female_child,
-        "op_old_male": report.op_old_male, "op_old_female": report.op_old_female,
-        "op_old_male_child": report.op_old_male_child, "op_old_female_child": report.op_old_female_child,
-        "op_emer_male": report.op_emer_male, "op_emer_female": report.op_emer_female,
-        "op_emer_male_child": report.op_emer_male_child, "op_emer_female_child": report.op_emer_female_child,
-        "adm_male": report.adm_male, "adm_female": report.adm_female,
-        "adm_male_child": report.adm_male_child, "adm_female_child": report.adm_female_child,
-        "adm_emer_male": report.adm_emer_male, "adm_emer_female": report.adm_emer_female,
-        "adm_emer_male_child": report.adm_emer_male_child, "adm_emer_female_child": report.adm_emer_female_child,
-        "mlc_male": report.mlc_male, "mlc_female": report.mlc_female,
-        "mlc_male_child": report.mlc_male_child, "mlc_female_child": report.mlc_female_child,
-        "sdd_male": report.sdd_male, "sdd_female": report.sdd_female,
-        "sdd_male_child": report.sdd_male_child, "sdd_female_child": report.sdd_female_child,
-        "tubec_male": report.tubec_male, "tubec_female": report.tubec_female,
-        "tubec_male_child": report.tubec_male_child, "tubec_female_child": report.tubec_female_child,
-        "vasec_male": report.vasec_male, "vasec_female": report.vasec_female,
-        "vasec_male_child": report.vasec_male_child, "vasec_female_child": report.vasec_female_child,
-        "minor_surg_male": report.minor_surg_male, "minor_surg_female": report.minor_surg_female,
-        "minor_surg_male_child": report.minor_surg_male_child, "minor_surg_female_child": report.minor_surg_female_child,
-        "major_surg_male": report.major_surg_male, "major_surg_female": report.major_surg_female,
-        "major_surg_male_child": report.major_surg_male_child, "major_surg_female_child": report.major_surg_female_child,
-        "deaths_male": report.deaths_male, "deaths_female": report.deaths_female,
-        "deaths_male_child": report.deaths_male_child, "deaths_female_child": report.deaths_female_child,
-        "normal_deliveries": report.normal_deliveries, "caesarean_deliveries": report.caesarean_deliveries,
-        "male_children": report.male_children, "female_children": report.female_children,
-        "lab_tests": report.lab_tests, "cumulative_inpatient_days": report.cumulative_inpatient_days,
-        "user_charges_collection": report.user_charges_collection, "rsby_cases": report.rsby_cases,
-    }
-    return render_template(
-        "hospital_report_form.html",
-        user=user,
-        report=report,
-        form_action=url_for("hospital_report_edit", report_id=report.id),
-        submit_label="Save Changes",
-        cancel_url=url_for("hospital_report_view", report_id=report.id),
-        initial_data=initial_data,
-    )
-
-
-@app.route("/morbidity/report/new", methods=["GET", "POST"])
-@login_required
-def new_morbidity_report():
-    user = current_user()
-    if request.method == "POST":
-        health_institution_name = request.form.get("health_institution_name", "").strip()
-        month_year = request.form.get("month_year", "").strip()
-
-        if not all([health_institution_name, month_year]):
-            flash("Health institution name and month/year are required.", "danger")
-            return redirect(url_for("new_morbidity_report"))
-
-        report = MorbidityReport(
-            user_id=user.id,
-            health_institution_name=health_institution_name,
-            month_year=month_year,
-            entries_json=json.dumps(build_morbidity_payload(request.form)),
-            notes=request.form.get("notes", "").strip(),
-        )
-        db.session.add(report)
-        db.session.commit()
-        flash("Morbidity and mortality report submitted.", "success")
-        return redirect(url_for("morbidity_reports"))
-
-    return render_template("morbidity_report_form.html", user=user, diseases=MORBIDITY_DISEASES)
-
-
-@app.route("/morbidity/reports")
-@login_required
-def morbidity_reports():
-    user = current_user()
-    reports = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
-    return render_template("morbidity_reports.html", user=user, reports=reports)
-
-
-@app.route("/morbidity/report/<int:report_id>/edit", methods=["GET", "POST"])
-@login_required
-def morbidity_report_edit(report_id):
-    user = current_user()
-    report = MorbidityReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission to edit this report.", "danger")
-        return redirect(url_for("morbidity_reports"))
-
-    if request.method == "POST":
-        report.health_institution_name = request.form.get("health_institution_name", "").strip()
-        report.month_year = request.form.get("month_year", "").strip()
-        if not all([report.health_institution_name, report.month_year]):
-            flash("Health institution name and month/year are required.", "danger")
-            return redirect(url_for("morbidity_report_edit", report_id=report.id))
-        report.entries_json = json.dumps(build_morbidity_payload(request.form))
-        report.notes = request.form.get("notes", "").strip()
-        db.session.commit()
-        flash("Morbidity report updated.", "success")
-        return redirect(url_for("morbidity_report_view", report_id=report.id))
-
-    return render_template(
-        "morbidity_report_form.html",
-        user=user,
-        diseases=MORBIDITY_DISEASES,
-        report=report,
-        initial_entries=json.loads(report.entries_json or "{}"),
-        form_action=url_for("morbidity_report_edit", report_id=report.id),
-        submit_label="Save Morbidity Report",
-        cancel_url=url_for("morbidity_report_view", report_id=report.id),
-    )
 
 
 @app.route("/cbhi/report/new", methods=["GET", "POST"])
@@ -1733,11 +1199,9 @@ def ncd_report_excel(report_id):
 def consolidated_reports():
     user = current_user()
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports.html",
@@ -1755,11 +1219,9 @@ def consolidated_reports():
 def consolidated_reports_print():
     user = current_user()
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports_print.html",
@@ -1776,11 +1238,9 @@ def consolidated_reports_print():
 def consolidated_reports_csv():
     user = current_user()
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
 
     output = io.StringIO()
@@ -1805,11 +1265,9 @@ def consolidated_reports_csv():
 def consolidated_reports_excel():
     user = current_user()
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.filter_by(user_id=user.id).order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
     output = build_consolidated_excel(f"My Consolidated Reports - {CONSOLIDATED_MODULE_LABELS[module]}", filtered_rows)
 
@@ -1817,286 +1275,6 @@ def consolidated_reports_excel():
     response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     filename = "consolidated_reports.xlsx" if module == "all" else f"consolidated_reports_{module}.xlsx"
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
-    return response
-
-
-@app.route("/morbidity/report/<int:report_id>")
-@login_required
-def morbidity_report_view(report_id):
-    user = current_user()
-    report = MorbidityReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission to view this report.", "danger")
-        return redirect(url_for("morbidity_reports"))
-
-    rows, total_opd, total_ipd = morbidity_rows(report)
-    return render_template(
-        "morbidity_report_view.html",
-        user=user,
-        report=report,
-        rows=rows,
-        total_opd=total_opd,
-        total_ipd=total_ipd,
-    )
-
-
-@app.route("/morbidity/report/<int:report_id>/print")
-@login_required
-def morbidity_report_print(report_id):
-    user = current_user()
-    report = MorbidityReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission.", "danger")
-        return redirect(url_for("morbidity_reports"))
-
-    rows, total_opd, total_ipd = morbidity_rows(report)
-    return render_template("morbidity_report_print.html", report=report, rows=rows, total_opd=total_opd, total_ipd=total_ipd)
-
-
-@app.route("/morbidity/report/<int:report_id>/export/csv")
-@login_required
-def morbidity_report_csv(report_id):
-    user = current_user()
-    report = MorbidityReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission.", "danger")
-        return redirect(url_for("morbidity_reports"))
-
-    rows, total_opd, total_ipd = morbidity_rows(report)
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["PROFORMA II"])
-    writer.writerow(["MORBIDITY AND MORTALITY REPORT"])
-    writer.writerow([f"Name of the Health Institution: {report.health_institution_name}", "", f"Month & Year: {report.month_year}"])
-    writer.writerow(["Sr. No.", "Name of the disease", "OPD", "IPD"])
-    for row in rows:
-        writer.writerow([row["sr_no"], row["disease_name"], row["opd"], row["ipd"]])
-    writer.writerow(["", "Total", total_opd, total_ipd])
-    if report.notes:
-        writer.writerow([])
-        writer.writerow(["Notes", report.notes])
-
-    filename = f"{report.health_institution_name}_{report.month_year}_morbidity_report.csv".replace(" ", "_")
-    response = make_response(output.getvalue())
-    response.headers["Content-Type"] = "text/csv; charset=utf-8"
-    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
-    return response
-
-
-@app.route("/morbidity/report/<int:report_id>/export/excel")
-@login_required
-def morbidity_report_excel(report_id):
-    user = current_user()
-    report = MorbidityReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission.", "danger")
-        return redirect(url_for("morbidity_reports"))
-
-    rows, total_opd, total_ipd = morbidity_rows(report)
-    output = create_morbidity_excel(report, rows, total_opd, total_ipd)
-    filename = f"{report.health_institution_name}_{report.month_year}_morbidity_report.xlsx".replace(" ", "_")
-    response = make_response(output.read())
-    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
-    return response
-
-
-@app.route("/hospital/report/<int:report_id>")
-@login_required
-def hospital_report_view(report_id):
-    user = current_user()
-    report = HospitalReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission to view this report.", "danger")
-        return redirect(url_for("hospital_reports"))
-    return render_template("hospital_report_view.html", user=user, report=report)
-
-
-@app.route("/hospital/report/<int:report_id>/print")
-@login_required
-def hospital_report_print(report_id):
-    user = current_user()
-    report = HospitalReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission.", "danger")
-        return redirect(url_for("hospital_reports"))
-    return render_template("hospital_report_print.html", report=report)
-
-
-@app.route("/hospital/report/<int:report_id>/export/csv")
-@login_required
-def hospital_report_csv(report_id):
-    user = current_user()
-    report = HospitalReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission.", "danger")
-        return redirect(url_for("hospital_reports"))
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-    # Header row
-    writer.writerow(["HP Indicator", "Male", "Female", "Male Child <14", "Female Child <14", "Total"])
-    rows = [
-        ("NO. OF OUTPATIENTS: NEW", report.op_new_male, report.op_new_female, report.op_new_male_child, report.op_new_female_child),
-        ("NO. OF OUTPATIENTS: OLD", report.op_old_male, report.op_old_female, report.op_old_male_child, report.op_old_female_child),
-        ("NO. OF OUTPATIENTS: EMERGENCY", report.op_emer_male, report.op_emer_female, report.op_emer_male_child, report.op_emer_female_child),
-        ("OUTPATIENTS TOTAL",
-         (report.op_new_male+report.op_old_male+report.op_emer_male),
-         (report.op_new_female+report.op_old_female+report.op_emer_female),
-         (report.op_new_male_child+report.op_old_male_child+report.op_emer_male_child),
-         (report.op_new_female_child+report.op_old_female_child+report.op_emer_female_child)),
-        ("NO. OF ADMISSIONS DURING THE MONTH", report.adm_male, report.adm_female, report.adm_male_child, report.adm_female_child),
-        ("NO. OF ADMISSIONS THROUGH EMERGENCY (OUT OF 2)", report.adm_emer_male, report.adm_emer_female, report.adm_emer_male_child, report.adm_emer_female_child),
-        ("NO. OF MEDICAL LEGAL CASES ADMITTED (OUT OF 2)", report.mlc_male, report.mlc_female, report.mlc_male_child, report.mlc_female_child),
-        ("NO. OF PATIENTS ADMITTED & DISCHARGED SAME DAY (OUT OF 2)", report.sdd_male, report.sdd_female, report.sdd_male_child, report.sdd_female_child),
-        ("NO. OF TUBECTOMIES INCLUDING LAPAROSCOPIC", report.tubec_male, report.tubec_female, report.tubec_male_child, report.tubec_female_child),
-        ("NO. OF VASECTOMIES", report.vasec_male, report.vasec_female, report.vasec_male_child, report.vasec_female_child),
-        ("NO. OF MINOR SURGERIES (EXC. VASECTOMIES)", report.minor_surg_male, report.minor_surg_female, report.minor_surg_male_child, report.minor_surg_female_child),
-        ("NO. OF MAJOR SURGERIES (EXC. TUBECTOMIES)", report.major_surg_male, report.major_surg_female, report.major_surg_male_child, report.major_surg_female_child),
-        ("TOTAL NO. OF SURGERIES",
-         report.tubec_male+report.vasec_male+report.minor_surg_male+report.major_surg_male,
-         report.tubec_female+report.vasec_female+report.minor_surg_female+report.major_surg_female,
-         report.tubec_male_child+report.vasec_male_child+report.minor_surg_male_child+report.major_surg_male_child,
-         report.tubec_female_child+report.vasec_female_child+report.minor_surg_female_child+report.major_surg_female_child),
-        ("NO. OF DEATHS", report.deaths_male, report.deaths_female, report.deaths_male_child, report.deaths_female_child),
-    ]
-    for label, m, f, mc, fc in rows:
-        writer.writerow([label, m, f, mc, fc, m+f+mc+fc])
-    writer.writerow([])
-    writer.writerow(["NO. OF NORMAL DELIVERIES", report.normal_deliveries])
-    writer.writerow(["NO. OF CAESAREAN DELIVERIES", report.caesarean_deliveries])
-    writer.writerow(["TOTAL NO. OF DELIVERIES", report.normal_deliveries + report.caesarean_deliveries])
-    writer.writerow(["MALE CH (EXC. STILL BIRTH OUT OF 15)", report.male_children])
-    writer.writerow(["FEMALE CH (EXC. STILL BIRTH OUT OF 15)", report.female_children])
-    writer.writerow(["NO. OF LAB-TESTS", report.lab_tests])
-    writer.writerow(["TOTAL NO. OF CUMULATIVE INPATIENTS DAYS", report.cumulative_inpatient_days])
-    writer.writerow(["USER CHARGES COLLECTION (Rs.)", report.user_charges_collection])
-    writer.writerow(["NUMBER OF RSBY CASES", report.rsby_cases])
-    if report.notes:
-        writer.writerow(["NOTES", report.notes])
-
-    fname = f"{report.hospital_name}_{report.month_year}_report.csv".replace(" ", "_")
-    response = make_response(output.getvalue())
-    response.headers["Content-Type"] = "text/csv; charset=utf-8"
-    response.headers["Content-Disposition"] = f"attachment; filename={fname}"
-    return response
-
-
-@app.route("/hospital/report/<int:report_id>/export/excel")
-@login_required
-def hospital_report_excel(report_id):
-    from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    from openpyxl.utils import get_column_letter
-    import openpyxl
-
-    user = current_user()
-    report = HospitalReport.query.get_or_404(report_id)
-    if report.user_id != user.id:
-        flash("You do not have permission.", "danger")
-        return redirect(url_for("hospital_reports"))
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "HP Report"
-
-    hdr_fill = PatternFill("solid", fgColor="C2410C")
-    hdr_font = Font(bold=True, color="FFFFFF", size=10)
-    sec_fill = PatternFill("solid", fgColor="FFF3E0")
-    sec_font = Font(bold=True, size=10)
-    tot_fill = PatternFill("solid", fgColor="FED7AA")
-    thin = Side(style="thin")
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
-    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    left = Alignment(horizontal="left", vertical="center", wrap_text=True)
-
-    def cell(row, col, val, fill=None, font=None, align=None):
-        c = ws.cell(row=row, column=col, value=val)
-        c.border = border
-        if fill: c.fill = fill
-        if font: c.font = font
-        c.alignment = align or center
-        return c
-
-    # Title
-    ws.merge_cells("A1:F1")
-    c = ws["A1"]
-    c.value = f"Hospital Performance Report — {report.hospital_name} | {report.district} | {report.month_year}"
-    c.font = Font(bold=True, size=12)
-    c.alignment = Alignment(horizontal="center")
-
-    # Column headers
-    headers = ["HP Indicator", "MALE", "FEMALE", "MALE CHILD <14 YRS", "FEMALE CHILD <14 YRS", "TOTAL"]
-    for ci, h in enumerate(headers, 1):
-        cell(2, ci, h, hdr_fill, hdr_font, center)
-
-    def add_row(row_num, label, m, f, mc, fc, fill=None):
-        cell(row_num, 1, label, fill, align=left)
-        for ci, v in enumerate([m, f, mc, fc, m+f+mc+fc], 2):
-            cell(row_num, ci, v, fill, align=center)
-
-    r = 3
-    add_row(r, "NO. OF OUTPATIENTS: NEW", report.op_new_male, report.op_new_female, report.op_new_male_child, report.op_new_female_child); r+=1
-    add_row(r, "OLD", report.op_old_male, report.op_old_female, report.op_old_male_child, report.op_old_female_child); r+=1
-    add_row(r, "EMERGENCY", report.op_emer_male, report.op_emer_female, report.op_emer_male_child, report.op_emer_female_child); r+=1
-    op_tm = report.op_new_male+report.op_old_male+report.op_emer_male
-    op_tf = report.op_new_female+report.op_old_female+report.op_emer_female
-    op_tmc = report.op_new_male_child+report.op_old_male_child+report.op_emer_male_child
-    op_tfc = report.op_new_female_child+report.op_old_female_child+report.op_emer_female_child
-    add_row(r, "TOTAL", op_tm, op_tf, op_tmc, op_tfc, tot_fill); r+=1
-    add_row(r, "NO. OF ADMISSIONS DURING THE MONTH", report.adm_male, report.adm_female, report.adm_male_child, report.adm_female_child); r+=1
-    add_row(r, "NO. OF ADMISSIONS THROUGH EMERGENCY (OUT OF 2)", report.adm_emer_male, report.adm_emer_female, report.adm_emer_male_child, report.adm_emer_female_child); r+=1
-    add_row(r, "NO. OF MEDICAL LEGAL CASES ADMITTED (OUT OF 2)", report.mlc_male, report.mlc_female, report.mlc_male_child, report.mlc_female_child); r+=1
-    add_row(r, "NO. OF PATIENTS ADMITTED & DISCHARGED SAME DAY (OUT OF 2)", report.sdd_male, report.sdd_female, report.sdd_male_child, report.sdd_female_child); r+=1
-    add_row(r, "NO. OF TUBECTOMIES INCLUDING LAPAROSCOPIC", report.tubec_male, report.tubec_female, report.tubec_male_child, report.tubec_female_child); r+=1
-    add_row(r, "NO. OF VASECTOMIES", report.vasec_male, report.vasec_female, report.vasec_male_child, report.vasec_female_child); r+=1
-    add_row(r, "NO. OF MINOR SURGERIES (EXC. VASECTOMIES)", report.minor_surg_male, report.minor_surg_female, report.minor_surg_male_child, report.minor_surg_female_child); r+=1
-    add_row(r, "NO. OF MAJOR SURGERIES (EXC. TUBECTOMIES)", report.major_surg_male, report.major_surg_female, report.major_surg_male_child, report.major_surg_female_child); r+=1
-    st_m = report.tubec_male+report.vasec_male+report.minor_surg_male+report.major_surg_male
-    st_f = report.tubec_female+report.vasec_female+report.minor_surg_female+report.major_surg_female
-    st_mc = report.tubec_male_child+report.vasec_male_child+report.minor_surg_male_child+report.major_surg_male_child
-    st_fc = report.tubec_female_child+report.vasec_female_child+report.minor_surg_female_child+report.major_surg_female_child
-    add_row(r, "TOTAL NO. OF SURGERIES (5+6+7+8)", st_m, st_f, st_mc, st_fc, tot_fill); r+=1
-    add_row(r, "NO. OF DEATHS (mention maternal & infant in notes)", report.deaths_male, report.deaths_female, report.deaths_male_child, report.deaths_female_child); r+=1
-
-    # Single-value rows
-    single_rows = [
-        ("NO. OF NORMAL DELIVERIES", report.normal_deliveries),
-        ("NO. OF CAESAREAN DELIVERIES", report.caesarean_deliveries),
-        ("TOTAL NO. OF DELIVERIES (13+14)", report.normal_deliveries + report.caesarean_deliveries),
-        ("MALE CH (EXCLUDING STILL BIRTH OUT OF 15)", report.male_children),
-        ("FEMALE CH (EXCLUDING STILL BIRTH OUT OF 15)", report.female_children),
-        ("NO. OF LAB-TESTS", report.lab_tests),
-        ("TOTAL NO. OF CUMULATIVE INPATIENTS DAYS", report.cumulative_inpatient_days),
-        ("USER CHARGES COLLECTION DURING THE MONTH (Rs.)", report.user_charges_collection),
-        ("NUMBER OF RSBY CASES DURING THE MONTH", report.rsby_cases),
-    ]
-    for label, val in single_rows:
-        cell(r, 1, label, align=left)
-        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
-        c2 = ws.cell(row=r, column=2, value=val)
-        c2.border = border
-        c2.alignment = center
-        r += 1
-
-    if report.notes:
-        cell(r, 1, "NOTES", align=left)
-        ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=6)
-        cn = ws.cell(row=r, column=2, value=report.notes)
-        cn.border = border
-        cn.alignment = left
-
-    ws.column_dimensions["A"].width = 48
-    for col in ["B", "C", "D", "E", "F"]:
-        ws.column_dimensions[col].width = 14
-
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-    fname = f"{report.hospital_name}_{report.month_year}_report.xlsx".replace(" ", "_")
-    response = make_response(output.read())
-    response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    response.headers["Content-Disposition"] = f"attachment; filename={fname}"
     return response
 
 
@@ -2130,18 +1308,13 @@ def admin_login():
 def admin_dashboard():
     admin = current_admin()
     users = User.query.order_by(User.created_at.desc()).all()
-    reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
     stats = {
         "total_users": len(users),
-        "total_reports": len(reports) + len(morbidity_reports) + len(cbhi_reports) + len(ncd_reports),
-        "total_hospital_reports": len(reports),
-        "total_morbidity_reports": len(morbidity_reports),
+        "total_reports": len(cbhi_reports) + len(ncd_reports),
         "total_cbhi_reports": len(cbhi_reports),
         "total_ncd_reports": len(ncd_reports),
-        "total_outpatients": sum(total_hospital_outpatients(r) for r in reports),
     }
     cbhi_summaries = []
     for report in cbhi_reports[:10]:
@@ -2164,8 +1337,6 @@ def admin_dashboard():
         user=current_user(),
         admin=admin,
         users=users,
-        reports=reports,
-        morbidity_reports=morbidity_reports,
         cbhi_reports=cbhi_reports,
         ncd_reports=ncd_reports,
         cbhi_summaries=cbhi_summaries,
@@ -2366,183 +1537,6 @@ def admin_user_delete(user_id):
     return redirect(url_for("admin_users"))
 
 
-@app.route("/admin/report/<int:report_id>")
-@admin_required
-def admin_report_view(report_id):
-    report = HospitalReport.query.get_or_404(report_id)
-    return render_template("admin_report_view.html", user=current_user(), admin=current_admin(), report=report)
-
-
-@app.route("/admin/report/<int:report_id>/edit", methods=["GET", "POST"])
-@admin_required
-def admin_report_edit(report_id):
-    report = HospitalReport.query.get_or_404(report_id)
-
-    if request.method == "POST":
-        report.hospital_name = request.form.get("hospital_name", "").strip()
-        report.district = request.form.get("district", "").strip()
-        report.month_year = request.form.get("month_year", "").strip()
-
-        if not all([report.hospital_name, report.district, report.month_year]):
-            flash("Hospital name, district, and month/year are required.", "danger")
-            return redirect(url_for("admin_report_edit", report_id=report.id))
-
-        def fi(name):
-            return request.form.get(name, 0, type=int)
-
-        report.op_new_male=fi("op_new_male"); report.op_new_female=fi("op_new_female")
-        report.op_new_male_child=fi("op_new_male_child"); report.op_new_female_child=fi("op_new_female_child")
-        report.op_old_male=fi("op_old_male"); report.op_old_female=fi("op_old_female")
-        report.op_old_male_child=fi("op_old_male_child"); report.op_old_female_child=fi("op_old_female_child")
-        report.op_emer_male=fi("op_emer_male"); report.op_emer_female=fi("op_emer_female")
-        report.op_emer_male_child=fi("op_emer_male_child"); report.op_emer_female_child=fi("op_emer_female_child")
-        report.adm_male=fi("adm_male"); report.adm_female=fi("adm_female")
-        report.adm_male_child=fi("adm_male_child"); report.adm_female_child=fi("adm_female_child")
-        report.adm_emer_male=fi("adm_emer_male"); report.adm_emer_female=fi("adm_emer_female")
-        report.adm_emer_male_child=fi("adm_emer_male_child"); report.adm_emer_female_child=fi("adm_emer_female_child")
-        report.mlc_male=fi("mlc_male"); report.mlc_female=fi("mlc_female")
-        report.mlc_male_child=fi("mlc_male_child"); report.mlc_female_child=fi("mlc_female_child")
-        report.sdd_male=fi("sdd_male"); report.sdd_female=fi("sdd_female")
-        report.sdd_male_child=fi("sdd_male_child"); report.sdd_female_child=fi("sdd_female_child")
-        report.tubec_male=fi("tubec_male"); report.tubec_female=fi("tubec_female")
-        report.tubec_male_child=fi("tubec_male_child"); report.tubec_female_child=fi("tubec_female_child")
-        report.vasec_male=fi("vasec_male"); report.vasec_female=fi("vasec_female")
-        report.vasec_male_child=fi("vasec_male_child"); report.vasec_female_child=fi("vasec_female_child")
-        report.minor_surg_male=fi("minor_surg_male"); report.minor_surg_female=fi("minor_surg_female")
-        report.minor_surg_male_child=fi("minor_surg_male_child"); report.minor_surg_female_child=fi("minor_surg_female_child")
-        report.major_surg_male=fi("major_surg_male"); report.major_surg_female=fi("major_surg_female")
-        report.major_surg_male_child=fi("major_surg_male_child"); report.major_surg_female_child=fi("major_surg_female_child")
-        report.deaths_male=fi("deaths_male"); report.deaths_female=fi("deaths_female")
-        report.deaths_male_child=fi("deaths_male_child"); report.deaths_female_child=fi("deaths_female_child")
-        report.normal_deliveries=fi("normal_deliveries"); report.caesarean_deliveries=fi("caesarean_deliveries")
-        report.male_children=fi("male_children"); report.female_children=fi("female_children")
-        report.lab_tests=fi("lab_tests"); report.cumulative_inpatient_days=fi("cumulative_inpatient_days")
-        report.user_charges_collection=fi("user_charges_collection"); report.rsby_cases=fi("rsby_cases")
-        report.notes = request.form.get("notes", "").strip()
-
-        db.session.commit()
-        flash("Report updated successfully.", "success")
-        return redirect(url_for("admin_report_view", report_id=report.id))
-
-    return render_template("admin_report_edit.html", user=current_user(), admin=current_admin(), report=report)
-
-
-@app.route("/admin/report/<int:report_id>/delete", methods=["POST"])
-@admin_required
-def admin_report_delete(report_id):
-    report = HospitalReport.query.get_or_404(report_id)
-    db.session.delete(report)
-    db.session.commit()
-    flash("Report deleted.", "info")
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/admin/reports/export.csv")
-@admin_required
-def admin_reports_export():
-    reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([
-        "id", "hospital_name", "district", "month_year", "owner_username", "owner_email",
-        "op_new_male", "op_new_female", "op_new_male_child", "op_new_female_child",
-        "op_old_male", "op_old_female", "op_old_male_child", "op_old_female_child",
-        "op_emer_male", "op_emer_female", "op_emer_male_child", "op_emer_female_child",
-        "adm_male", "adm_female", "adm_male_child", "adm_female_child",
-        "adm_emer_male", "adm_emer_female", "adm_emer_male_child", "adm_emer_female_child",
-        "mlc_male", "mlc_female", "mlc_male_child", "mlc_female_child",
-        "sdd_male", "sdd_female", "sdd_male_child", "sdd_female_child",
-        "tubec_male", "tubec_female", "tubec_male_child", "tubec_female_child",
-        "vasec_male", "vasec_female", "vasec_male_child", "vasec_female_child",
-        "minor_surg_male", "minor_surg_female", "minor_surg_male_child", "minor_surg_female_child",
-        "major_surg_male", "major_surg_female", "major_surg_male_child", "major_surg_female_child",
-        "deaths_male", "deaths_female", "deaths_male_child", "deaths_female_child",
-        "normal_deliveries", "caesarean_deliveries", "male_children", "female_children",
-        "lab_tests", "cumulative_inpatient_days", "user_charges_collection", "rsby_cases",
-        "notes", "created_at",
-    ])
-    for r in reports:
-        writer.writerow([
-            r.id, r.hospital_name, r.district, r.month_year,
-            r.owner.username, r.owner.email,
-            r.op_new_male, r.op_new_female, r.op_new_male_child, r.op_new_female_child,
-            r.op_old_male, r.op_old_female, r.op_old_male_child, r.op_old_female_child,
-            r.op_emer_male, r.op_emer_female, r.op_emer_male_child, r.op_emer_female_child,
-            r.adm_male, r.adm_female, r.adm_male_child, r.adm_female_child,
-            r.adm_emer_male, r.adm_emer_female, r.adm_emer_male_child, r.adm_emer_female_child,
-            r.mlc_male, r.mlc_female, r.mlc_male_child, r.mlc_female_child,
-            r.sdd_male, r.sdd_female, r.sdd_male_child, r.sdd_female_child,
-            r.tubec_male, r.tubec_female, r.tubec_male_child, r.tubec_female_child,
-            r.vasec_male, r.vasec_female, r.vasec_male_child, r.vasec_female_child,
-            r.minor_surg_male, r.minor_surg_female, r.minor_surg_male_child, r.minor_surg_female_child,
-            r.major_surg_male, r.major_surg_female, r.major_surg_male_child, r.major_surg_female_child,
-            r.deaths_male, r.deaths_female, r.deaths_male_child, r.deaths_female_child,
-            r.normal_deliveries, r.caesarean_deliveries, r.male_children, r.female_children,
-            r.lab_tests, r.cumulative_inpatient_days, r.user_charges_collection, r.rsby_cases,
-            r.notes, r.created_at.isoformat(),
-        ])
-    response = make_response(output.getvalue())
-    response.headers["Content-Type"] = "text/csv; charset=utf-8"
-    response.headers["Content-Disposition"] = "attachment; filename=hospital_reports.csv"
-    return response
-
-
-@app.route("/admin/morbidity-report/<int:report_id>")
-@admin_required
-def admin_morbidity_report_view(report_id):
-    report = MorbidityReport.query.get_or_404(report_id)
-    rows, total_opd, total_ipd = morbidity_rows(report)
-    return render_template(
-        "admin_morbidity_report_view.html",
-        user=current_user(),
-        admin=current_admin(),
-        report=report,
-        rows=rows,
-        total_opd=total_opd,
-        total_ipd=total_ipd,
-    )
-
-
-@app.route("/admin/morbidity-report/<int:report_id>/delete", methods=["POST"])
-@admin_required
-def admin_morbidity_report_delete(report_id):
-    report = MorbidityReport.query.get_or_404(report_id)
-    db.session.delete(report)
-    db.session.commit()
-    flash("Morbidity report deleted.", "info")
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/admin/morbidity-reports/export.csv")
-@admin_required
-def admin_morbidity_reports_export():
-    reports = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["id", "health_institution_name", "month_year", "owner_username", "owner_email", "sr_no", "disease_name", "opd", "ipd", "notes", "created_at"])
-    for report in reports:
-        rows, _, _ = morbidity_rows(report)
-        for row in rows:
-            writer.writerow([
-                report.id,
-                report.health_institution_name,
-                report.month_year,
-                report.morbidity_owner.username,
-                report.morbidity_owner.email,
-                row["sr_no"],
-                row["disease_name"],
-                row["opd"],
-                row["ipd"],
-                report.notes,
-                report.created_at.isoformat(),
-            ])
-
-    response = make_response(output.getvalue())
-    response.headers["Content-Type"] = "text/csv; charset=utf-8"
-    response.headers["Content-Disposition"] = "attachment; filename=morbidity_reports.csv"
-    return response
-
-
 @app.route("/admin/cbhi-report/<int:report_id>")
 @admin_required
 def admin_cbhi_report_view(report_id):
@@ -2707,11 +1701,9 @@ def admin_ncd_reports_export():
 @admin_required
 def admin_consolidated_reports():
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list, include_owner=True)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports.html",
@@ -2728,11 +1720,9 @@ def admin_consolidated_reports():
 @admin_required
 def admin_consolidated_reports_print():
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list, include_owner=True)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports_print.html",
@@ -2748,11 +1738,9 @@ def admin_consolidated_reports_print():
 @admin_required
 def admin_consolidated_reports_csv():
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list, include_owner=True)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
 
     output = io.StringIO()
@@ -2776,11 +1764,9 @@ def admin_consolidated_reports_csv():
 @admin_required
 def admin_consolidated_reports_excel():
     module = normalized_module_filter(request.args.get("module"))
-    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
-    morbidity_reports_list = MorbidityReport.query.order_by(MorbidityReport.created_at.desc()).all()
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(hospital_reports, morbidity_reports_list, cbhi_reports_list, ncd_reports_list, include_owner=True)
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
     output = build_consolidated_excel(f"Admin Consolidated Reports - {CONSOLIDATED_MODULE_LABELS[module]}", filtered_rows, include_owner=True)
 

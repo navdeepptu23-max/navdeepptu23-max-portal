@@ -1,48 +1,151 @@
 {% extends "dashboard_base.html" %}
 
-{% block dashboard_title %}Dashboard - Web Portal{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block dashboard_content %}
-<div class="container">
-    <div class="card">
-        <h2>👋 Welcome, {{ user.username }}!</h2>
-        <p style="color: #666; margin-bottom: 20px;">This is your personal dashboard. You can manage your profile and account settings from here.</p>
-        
-        <div class="user-info">
-            <div class="info-block">
-                <label>Username</label>
-                <p>{{ user.username }}</p>
-            </div>
-            <div class="info-block">
-                <label>Email</label>
-                <p>{{ user.email }}</p>
-            </div>
-            <div class="info-block">
-                <label>Full Name</label>
-                <p>{{ user.full_name if user.full_name else 'Not set' }}</p>
-            </div>
-            <div class="info-block">
-                <label>Member Since</label>
-                <p>{{ user.created_at.strftime('%B %d, %Y') }}</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card">
-        <h2>📊 Hospital Reports</h2>
-        <p style="color: #666; margin-bottom: 20px;">Create and manage hospital reports.</p>
-        <div class="links">
-            <a href="{{ url_for('new_hospital_report') }}">➕ New Hospital Report</a>
-            <a href="{{ url_for('hospital_reports_list') }}">📋 View All Reports</a>
-        </div>
-    </div>
 
-    <div class="card">
-        <h2>⚙️ Account Management</h2>
-        <div class="links">
-            <a href="{{ url_for('profile') }}">✏️ Edit Profile</a>
-            <a href="{{ url_for('change_password') }}">🔑 Change Password</a>
-        </div>
+<!-- Welcome banner -->
+<div style="background:var(--gradient);color:#fff;padding:1.5rem;border-radius:var(--radius);margin-bottom:1.75rem;">
+  <div style="display:flex;align-items:center;gap:1rem;justify-content:space-between;flex-wrap:wrap;">
+    <div>
+      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:.25rem;">Welcome, {{ user.full_name or user.username }}!</h2>
+      <p style="opacity:.85;font-size:.9rem;">Member since {{ user.created_at.strftime('%B %d, %Y') }}</p>
     </div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+      <a href="{{ url_for('new_hospital_report') }}" class="btn btn-ghost btn-sm"><i class="fas fa-plus-circle"></i> New Report</a>
+      <a href="{{ url_for('new_post') }}" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> Write</a>
+    </div>
+  </div>
 </div>
+
+<!-- Stats grid -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:2rem;">
+  <div class="stat-card" style="background:var(--gradient);color:#fff;">
+    <div style="position:relative;z-index:1;">
+      <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+      <div class="stat-number">{{ stats.post_count }}</div>
+      <div class="stat-label">Posts Published</div>
+    </div>
+  </div>
+  <div class="stat-card" style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);color:#fff;">
+    <div style="position:relative;z-index:1;">
+      <div class="stat-icon"><i class="fas fa-eye"></i></div>
+      <div class="stat-number">{{ stats.total_views }}</div>
+      <div class="stat-label">Total Views</div>
+    </div>
+  </div>
+  <div class="stat-card" style="background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);color:#fff;">
+    <div style="position:relative;z-index:1;">
+      <div class="stat-icon"><i class="fas fa-heart"></i></div>
+      <div class="stat-number">{{ stats.total_likes }}</div>
+      <div class="stat-label">Total Likes</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+  </div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+      <a href="{{ url_for('new_hospital_report') }}" class="action-card" style="text-decoration:none;color:inherit;">
+        <div class="action-icon"><i class="fas fa-hospital-alt"></i></div>
+        <div class="action-label">New Hospital Report</div>
+        <div class="action-sub">Create & submit</div>
+      </a>
+      <a href="{{ url_for('hospital_reports_list') }}" class="action-card" style="text-decoration:none;color:inherit;">
+        <div class="action-icon"><i class="fas fa-list-alt"></i></div>
+        <div class="action-label">My Reports</div>
+        <div class="action-sub">View all</div>
+      </a>
+      <a href="{{ url_for('new_post') }}" class="action-card" style="text-decoration:none;color:inherit;">
+        <div class="action-icon"><i class="fas fa-pen"></i></div>
+        <div class="action-label">Write a Post</div>
+        <div class="action-sub">Share ideas</div>
+      </a>
+      <a href="{{ url_for('profile', username=user.username) }}" class="action-card" style="text-decoration:none;color:inherit;">
+        <div class="action-icon"><i class="fas fa-user-circle"></i></div>
+        <div class="action-label">My Profile</div>
+        <div class="action-sub">View/edit</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Account info -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:1.75rem;">
+  <div class="card">
+    <div class="card-header bg-light">
+      <h6 class="mb-0"><i class="fas fa-user-circle"></i> Account Info</h6>
+    </div>
+    <div class="card-body">
+      <div style="margin-bottom:.75rem;">
+        <div style="font-size:.75rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;">Username</div>
+        <div style="font-weight:600;color:var(--text);">{{ user.username }}</div>
+      </div>
+      <div style="margin-bottom:.75rem;">
+        <div style="font-size:.75rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;">Email</div>
+        <div style="font-weight:600;color:var(--text);word-break:break-all;">{{ user.email }}</div>
+      </div>
+      <div>
+        <div style="font-size:.75rem;text-transform:uppercase;color:var(--text-muted);font-weight:700;">Member ID</div>
+        <div style="font-weight:600;color:var(--primary);">#{{ user.id }}</div>
+      </div>
+    </div>
+  </div>
+
+  {% if user.bio %}
+  <div class="card">
+    <div class="card-header bg-light">
+      <h6 class="mb-0"><i class="fas fa-quote-left"></i> Bio</h6>
+    </div>
+    <div class="card-body">
+      <p style="margin:0;line-height:1.6;color:#4a5568;">{{ user.bio }}</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.stat-card {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  padding: 1.5rem;
+  position: relative;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 150px;
+  height: 150px;
+  background: rgba(255,255,255,.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 80px;
+  height: 80px;
+  background: rgba(255,255,255,.08);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.bg-light {
+  background: #f7fafc !important;
+}
+</style>
 {% endblock %}
