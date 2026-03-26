@@ -25,4 +25,4 @@ services:
       - key: ADMIN_EMAIL
         value: admin@possireports.in
       - key: ADMIN_PASSWORD
-        generateValue: true
+        value: Admin@12345

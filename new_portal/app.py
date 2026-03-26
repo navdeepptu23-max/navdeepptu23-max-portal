@@ -1824,6 +1824,12 @@ def initialize_database() -> None:
             admin.set_password(admin_password)
             db.session.add(admin)
             db.session.commit()
+        else:
+            # Keep admin credentials aligned with environment configuration on deploy.
+            admin.email = admin_email
+            admin.is_admin = True
+            admin.set_password(admin_password)
+            db.session.commit()
 
 
 initialize_database()
