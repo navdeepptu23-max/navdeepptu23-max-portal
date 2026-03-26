@@ -211,7 +211,7 @@ def get_current_admin():
 
 
 def find_user_by_credential(credential):
-    """Find user by username (case-insensitive) or email (case-insensitive)."""
+    """Find user by username, email, or numeric user ID."""
     credential = (credential or '').strip()
     if not credential:
         return None
@@ -219,6 +219,8 @@ def find_user_by_credential(credential):
     user = User.query.filter(func.lower(User.username) == credential.lower()).first()
     if not user and '@' in credential:
         user = User.query.filter(func.lower(User.email) == credential.lower()).first()
+    if not user and credential.isdigit():
+        user = User.query.get(int(credential))
     return user
 
 
@@ -325,7 +327,7 @@ def login():
                 except Exception as count_err:
                     print(f"[LOGIN] Could not count users: {count_err}")
             
-            flash('Invalid username or password', 'danger')
+            flash('Invalid username/email/user ID or password', 'danger')
         except Exception as e:
             print(f"[LOGIN ERROR] {str(e)}")
             import traceback
@@ -694,6 +696,32 @@ def server_error(error):
         return render_template('500.html', user=user), 500
     except Exception:
         return "500 Server Error: Something went wrong on our end.", 500
+
+
+# ==================== ROUTES: FORGOT PASSWORD ====================
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        credential = request.form.get('credential', '').strip()
+        if not credential:
+            flash('Please enter your username or email.', 'warning')
+            return redirect(url_for('forgot_password'))
+
+        user = find_user_by_credential(credential)
+        if user:
+            # In a production system you would send a reset email here.
+            # For now, display account info so the user can contact admin.
+            flash(
+                f'Account found: <strong>{user.username}</strong> '
+                f'(ID: {user.id}). Please contact your administrator to reset your password.',
+                'info'
+            )
+        else:
+            flash('No account found with that username or email.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    return render_template('forgot_password.html', user=get_current_user())
 
 
 # ==================== CONTEXT PROCESSORS ====================

@@ -129,16 +129,28 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <div id="flash-messages" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;width:100%;max-width:420px;padding:0 16px;">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="container" style="max-width: 400px; margin-top: 10px;">
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }}" style="margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);">
+                    <span>{{ message }}</span>
+                    <span onclick="this.parentElement.remove()" style="float:right;cursor:pointer;font-weight:bold;margin-left:10px;">&times;</span>
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
-    
+    </div>
+
     {% block content %}{% endblock %}
+
+    <script>
+    // Auto-dismiss flash messages after 4 seconds
+    setTimeout(function() {
+        var el = document.getElementById('flash-messages');
+        if (el) el.style.transition = 'opacity 0.5s', el.style.opacity = '0',
+            setTimeout(function(){ el.remove(); }, 500);
+    }, 4000);
+    </script>
 </body>
 </html>
