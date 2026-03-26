@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, session, url_for, make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text, func
+from sqlalchemy.pool import NullPool
 from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
@@ -29,13 +30,15 @@ if _database_url.startswith("sqlite"):
         "pool_pre_ping": True,
     }
 else:
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_size": 5,
-        "max_overflow": 2,
-        "pool_timeout": 30,
-        "pool_recycle": 300,
+    engine_opts = {
         "pool_pre_ping": True,
+        "pool_recycle": 300,
     }
+    if os.getenv("RENDER"):
+        # Render free DB plans are sensitive to pooled idle connections.
+        # NullPool avoids connection checkout starvation/timeouts (e3q8).
+        engine_opts["poolclass"] = NullPool
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = engine_opts
 
 db = SQLAlchemy(app)
 
