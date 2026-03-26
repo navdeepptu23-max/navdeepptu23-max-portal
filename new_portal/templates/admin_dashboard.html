@@ -65,7 +65,19 @@
             <td>
               <a href="{{ url_for('admin_user_reset_password', user_id=u.id) }}">Reset Password</a>
               <span class="action-sep">|</span>
-              <a href="{{ url_for('admin_users') }}">Manage</a>
+              <form class="inline-form" method="post" action="{{ url_for('admin_user_toggle_active', user_id=u.id) }}">
+                {% if u.is_active %}
+                  <button class="link-btn" type="submit">Deactivate</button>
+                {% else %}
+                  <button class="link-btn" type="submit">Activate</button>
+                {% endif %}
+              </form>
+              <span class="action-sep">|</span>
+              <form class="inline-form" method="post" action="{{ url_for('admin_user_delete', user_id=u.id) }}" onsubmit="return confirm('Delete this user account?');">
+                <button class="link-btn danger" type="submit">Delete</button>
+              </form>
+              <span class="action-sep">|</span>
+              <a href="{{ url_for('admin_users') }}">Manage All</a>
             </td>
           </tr>
         {% endfor %}
