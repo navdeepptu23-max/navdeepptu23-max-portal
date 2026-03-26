@@ -3,8 +3,10 @@ import secrets
 import csv
 import io
 import json
+import socket
 from functools import wraps
 from datetime import datetime
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, session, url_for, make_response
@@ -16,12 +18,33 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 load_dotenv()
 
+
+def resolve_database_url() -> str:
+    database_url = os.getenv("DATABASE_URL", "sqlite:///portal.db")
+
+    # Render provides postgres:// but SQLAlchemy >= 1.4 requires postgresql://
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+    if database_url.startswith("postgresql://"):
+        parsed = urlparse(database_url)
+        hostname = parsed.hostname
+        if hostname:
+            try:
+                socket.getaddrinfo(hostname, parsed.port or 5432)
+            except socket.gaierror:
+                fallback_url = "sqlite:///portal.db"
+                print(
+                    f"[DB CONFIG WARNING] Unresolvable database host '{hostname}'. "
+                    f"Falling back to {fallback_url}."
+                )
+                return fallback_url
+
+    return database_url
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", secrets.token_hex(32))
-_database_url = os.getenv("DATABASE_URL", "sqlite:///portal.db")
-# Render provides postgres:// but SQLAlchemy ≥1.4 requires postgresql://
-if _database_url.startswith("postgres://"):
-    _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+_database_url = resolve_database_url()
 app.config["SQLALCHEMY_DATABASE_URI"] = _database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
