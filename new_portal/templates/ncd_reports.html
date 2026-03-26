@@ -1,10 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}My CBHI Form-2 Reports | Nova Portal{% endblock %}
+{% block title %}{{ title or 'My CBHI Form-2 Reports' }} | Nova Portal{% endblock %}
 {% block content %}
 <section class="card">
-  <h2>My CBHI Form-2 Reports</h2>
+  <h2>{{ title or 'My CBHI Form-2 Reports' }}</h2>
   <div class="cta-row">
-    <a class="btn primary" href="{{ url_for('new_ncd_report') }}">Add CBHI Form-2 Report</a>
+    {% if admin_mode %}
+      <a class="btn ghost" href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+      <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='cbhi2') }}">Module Summary</a>
+      <a class="btn ghost" href="{{ url_for('admin_ncd_reports_export') }}">Export CSV</a>
+    {% else %}
+      <a class="btn primary" href="{{ url_for('new_ncd_report') }}">Add CBHI Form-2 Report</a>
+    {% endif %}
   </div>
 
   {% if reports %}
@@ -12,6 +18,9 @@
       <thead>
         <tr>
           <th>Health Establishment</th>
+          {% if show_owner %}
+            <th>Owner</th>
+          {% endif %}
           <th>Month</th>
           <th>Year</th>
           <th>Created</th>
@@ -22,20 +31,29 @@
         {% for report in reports %}
           <tr>
             <td>{{ report.health_establishment_name }}</td>
+            {% if show_owner %}
+              <td>{{ report.ncd_owner.username }}</td>
+            {% endif %}
             <td>{{ report.month }}</td>
             <td>{{ report.year }}</td>
             <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
             <td>
-              <a href="{{ url_for('ncd_report_view', report_id=report.id) }}">Open</a>
+              <a href="{{ url_for('admin_ncd_report_view', report_id=report.id) if admin_mode else url_for('ncd_report_view', report_id=report.id) }}">Open</a>
               <span class="action-sep">|</span>
-              <a href="{{ url_for('ncd_report_edit', report_id=report.id) }}">Edit</a>
+              <a href="{{ url_for('admin_ncd_report_edit', report_id=report.id) if admin_mode else url_for('ncd_report_edit', report_id=report.id) }}">Edit</a>
+              {% if admin_mode %}
+                <span class="action-sep">|</span>
+                <form class="inline-form" method="post" action="{{ url_for('admin_ncd_report_delete', report_id=report.id) }}" onsubmit="return confirm('Delete this CBHI Form-2 report?');">
+                  <button class="link-btn danger" type="submit">Delete</button>
+                </form>
+              {% endif %}
             </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
   {% else %}
-    <p>No CBHI Form-2 reports yet.</p>
+    <p>{{ 'No CBHI Form-2 reports available.' if admin_mode else 'No CBHI Form-2 reports yet.' }}</p>
   {% endif %}
 </section>
 {% endblock %}

@@ -1632,6 +1632,21 @@ def admin_cbhi_report_delete(report_id):
     return redirect(url_for("admin_dashboard"))
 
 
+@app.route("/admin/cbhi-reports")
+@admin_required
+def admin_cbhi_reports():
+    reports = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
+    return render_template(
+        "cbhi_reports.html",
+        user=current_user(),
+        admin=current_admin(),
+        reports=reports,
+        admin_mode=True,
+        show_owner=True,
+        title="Admin CBHI Form-1 Reports",
+    )
+
+
 @app.route("/admin/cbhi-reports/export.csv")
 @admin_required
 def admin_cbhi_reports_export():
@@ -1710,6 +1725,21 @@ def admin_ncd_report_delete(report_id):
     db.session.commit()
     flash("CBHI Form-2 report deleted.", "info")
     return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/ncd-reports")
+@admin_required
+def admin_ncd_reports():
+    reports = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
+    return render_template(
+        "ncd_reports.html",
+        user=current_user(),
+        admin=current_admin(),
+        reports=reports,
+        admin_mode=True,
+        show_owner=True,
+        title="Admin CBHI Form-2 Reports",
+    )
 
 
 @app.route("/admin/ncd-reports/export.csv")
