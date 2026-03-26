@@ -9,6 +9,8 @@
     <a class="btn ghost" href="{{ url_for('cbhi_reports') }}">CBHI Form-1 Reports</a>
     <a class="btn primary" href="{{ url_for('new_ncd_report') }}">New CBHI Form-2</a>
     <a class="btn ghost" href="{{ url_for('ncd_reports') }}">CBHI Form-2 Reports</a>
+    <a class="btn primary" href="{{ url_for('new_hospital_report') }}">New Hospital Indicator</a>
+    <a class="btn ghost" href="{{ url_for('hospital_reports_list') }}">Hospital Indicator Reports</a>
     <a class="btn ghost" href="{{ url_for('consolidated_reports') }}">Consolidated Reports</a>
   </div>
   <div class="stats">
@@ -23,6 +25,10 @@
     <article>
       <h3>CBHI Form-2 Reports</h3>
       <p>{{ ncd_reports|length }}</p>
+    </article>
+    <article>
+      <h3>Hospital Reports</h3>
+      <p>{{ hospital_reports|length }}</p>
     </article>
   </div>
 
@@ -76,6 +82,32 @@
             <td>{{ item.overall_total }}</td>
             <td>{{ item.deaths_total }}</td>
             <td><a href="{{ url_for('ncd_report_view', report_id=item.report.id) }}">Open</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if hospital_reports %}
+    <h3 class="section-title">Latest Hospital Indicator Reports</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Hospital</th>
+          <th>District</th>
+          <th>Month and Year</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in hospital_reports[:5] %}
+          <tr>
+            <td>{{ report.hospital_name }}</td>
+            <td>{{ report.district }}</td>
+            <td>{{ report.month_year }}</td>
+            <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
+            <td><a href="{{ url_for('view_hospital_report', report_id=report.id) }}">Open</a></td>
           </tr>
         {% endfor %}
       </tbody>

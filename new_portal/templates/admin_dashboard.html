@@ -10,6 +10,7 @@
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports') }}">Consolidated Reports</a>
     <a class="btn ghost" href="{{ url_for('admin_cbhi_reports') }}">CBHI Form-1 Reports</a>
     <a class="btn ghost" href="{{ url_for('admin_ncd_reports') }}">CBHI Form-2 Reports</a>
+    <a class="btn ghost" href="{{ url_for('admin_hospital_reports') }}">Hospital Indicator Reports</a>
     <a class="btn ghost" href="{{ url_for('admin_user_create') }}">Create Login ID</a>
     <a class="btn ghost" href="{{ url_for('admin_users') }}">Manage Users</a>
     <a class="btn ghost" href="{{ url_for('admin_logout') }}">Admin Logout</a>
@@ -20,6 +21,7 @@
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='all') }}">All Modules</a>
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='cbhi1') }}">CBHI Form-1</a>
     <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='cbhi2') }}">CBHI Form-2</a>
+    <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='hospital') }}">Hospital Indicator</a>
   </div>
 
   <div class="stats">
@@ -38,6 +40,10 @@
     <article>
       <h3>CBHI Form-2 Reports</h3>
       <p>{{ stats.total_ncd_reports }}</p>
+    </article>
+    <article>
+      <h3>Hospital Reports</h3>
+      <p>{{ stats.total_hospital_reports }}</p>
     </article>
   </div>
 

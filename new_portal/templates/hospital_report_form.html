@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit' if report else 'New' }} Hospital Indicator Report | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>{{ 'Edit Hospital Indicator Report' if report else 'Hospital Indicator Report' }}</h2>
+
+  <form method="post" action="{{ form_action or url_for('new_hospital_report') }}" class="form-grid">
+    <div class="report-table-wrapper">
+      <table class="report-table morbidity-table">
+        <tbody>
+          <tr>
+            <td colspan="2" class="indicator bold">Name of Hospital: <input type="text" name="hospital_name" value="{{ report.hospital_name if report else '' }}" required /></td>
+            <td colspan="2" class="indicator bold">Sanctioned Beds: <input type="text" name="sanctioned_beds" value="{{ hospital_meta.sanctioned_beds if hospital_meta else '' }}" /></td>
+            <td colspan="3" class="indicator bold">Month &amp; Year: <input type="text" name="month_year" value="{{ report.month_year if report else '' }}" placeholder="APR-2024" required /></td>
+          </tr>
+          <tr>
+            <td colspan="2" class="indicator bold">District: <input type="text" name="district" value="{{ report.district if report else '' }}" required /></td>
+            <td colspan="2" class="indicator bold">Functional Beds: <input type="text" name="functional_beds" value="{{ hospital_meta.functional_beds if hospital_meta else '' }}" /></td>
+            <td colspan="3" class="indicator bold">Doctors Incharge: <input type="text" name="doctors_incharge" value="{{ hospital_meta.doctors_incharge if hospital_meta else '' }}" /></td>
+          </tr>
+        </tbody>
+        <thead>
+          <tr>
+            <th style="width: 56px;">Sr.</th>
+            <th>HP Indicator</th>
+            <th>Male</th>
+            <th>Female</th>
+            <th>Male Child &lt;14 Years</th>
+            <th>Female Child &lt;14 Years</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="4" class="single-val">1</td>
+            <td class="indicator bold">No. of Outpatients: New</td>
+            <td><input type="number" min="0" name="outpatients_new_male" class="hp-num out-new" value="{{ report.outpatients_new_male if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_new_female" class="hp-num out-new" value="{{ report.outpatients_new_female if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_new_male_child" class="hp-num out-new" value="{{ report.outpatients_new_male_child if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_new_female_child" class="hp-num out-new" value="{{ report.outpatients_new_female_child if report else 0 }}" /></td>
+            <td class="tot"><input type="number" class="computed" id="out_new_total" readonly /></td>
+          </tr>
+          <tr>
+            <td class="indicator bold">Old</td>
+            <td><input type="number" min="0" name="outpatients_old_male" class="hp-num out-old" value="{{ report.outpatients_old_male if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_old_female" class="hp-num out-old" value="{{ report.outpatients_old_female if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_old_male_child" class="hp-num out-old" value="{{ report.outpatients_old_male_child if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_old_female_child" class="hp-num out-old" value="{{ report.outpatients_old_female_child if report else 0 }}" /></td>
+            <td class="tot"><input type="number" class="computed" id="out_old_total" readonly /></td>
+          </tr>
+          <tr>
+            <td class="indicator bold">Emergency</td>
+            <td><input type="number" min="0" name="outpatients_emergency_male" class="hp-num out-emr" value="{{ report.outpatients_emergency_male if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_emergency_female" class="hp-num out-emr" value="{{ report.outpatients_emergency_female if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_emergency_male_child" class="hp-num out-emr" value="{{ report.outpatients_emergency_male_child if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="outpatients_emergency_female_child" class="hp-num out-emr" value="{{ report.outpatients_emergency_female_child if report else 0 }}" /></td>
+            <td class="tot"><input type="number" class="computed" id="out_emr_total" readonly /></td>
+          </tr>
+          <tr class="row-total">
+            <td class="indicator bold">Total</td>
+            <td class="single-val"><input type="number" class="computed" id="out_m_total" readonly /></td>
+            <td class="single-val"><input type="number" class="computed" id="out_f_total" readonly /></td>
+            <td class="single-val"><input type="number" class="computed" id="out_mc_total" readonly /></td>
+            <td class="single-val"><input type="number" class="computed" id="out_fc_total" readonly /></td>
+            <td class="tot"><input type="number" class="computed" id="out_all_total" readonly /></td>
+          </tr>
+
+          <tr>
+            <td class="single-val">2</td>
+            <td class="indicator bold">No. of Admissions During the Month</td>
+            <td><input type="number" min="0" name="admissions_male" class="hp-num adm-row" value="{{ report.admissions_male if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="admissions_female" class="hp-num adm-row" value="{{ report.admissions_female if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="admissions_male_child" class="hp-num adm-row" value="{{ report.admissions_male_child if report else 0 }}" /></td>
+            <td><input type="number" min="0" name="admissions_female_child" class="hp-num adm-row" value="{{ report.admissions_female_child if report else 0 }}" /></td>
+            <td class="tot"><input type="number" class="computed" id="adm_total" readonly /></td>
+          </tr>
+          <tr>
+            <td class="single-val">3</td>
+            <td class="indicator bold">No. of Admissions Through Emergency (Out of 2)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="admissions_emergency" value="{{ report.admissions_emergency if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">4</td>
+            <td class="indicator bold">No. of Medical Legal Cases Admitted (Out of 2)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="medical_legal_cases" value="{{ report.medical_legal_cases if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">5</td>
+            <td class="indicator bold">No. of Patients Admitted and Discharged on the Same Day (Out of 2)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="same_day_admission_discharge" value="{{ report.same_day_admission_discharge if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">6</td>
+            <td class="indicator bold">No. of Tubectomies Including Laparoscopic</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="tubectomies" class="surgery" value="{{ report.tubectomies if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">7</td>
+            <td class="indicator bold">No. of Vasectomies</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="vasectomies" class="surgery" value="{{ report.vasectomies if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">8</td>
+            <td class="indicator bold">No. of Minor Surgeries (Excluding Vasectomies)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="minor_surgeries" class="surgery" value="{{ report.minor_surgeries if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">9</td>
+            <td class="indicator bold">No. of Major Surgeries (Excluding Tubectomies)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="major_surgeries" class="surgery" value="{{ report.major_surgeries if report else 0 }}" /></td>
+          </tr>
+          <tr class="row-total">
+            <td class="single-val">10</td>
+            <td class="indicator bold">Total No. of Surgeries (5+6+7+8)</td>
+            <td colspan="4"></td>
+            <td class="tot"><input type="number" class="computed" id="surgery_total" readonly /></td>
+          </tr>
+          <tr>
+            <td class="single-val">11</td>
+            <td class="indicator bold">No. of Deaths (mention maternal &amp; infant in remarks separately)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="deaths_total" value="{{ report.deaths_total if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">13</td>
+            <td class="indicator bold">No. of Normal Deliveries</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="normal_deliveries" class="delivery" value="{{ report.normal_deliveries if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">14</td>
+            <td class="indicator bold">No. of Caesarean Deliveries</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="caesarean_deliveries" class="delivery" value="{{ report.caesarean_deliveries if report else 0 }}" /></td>
+          </tr>
+          <tr class="row-total">
+            <td class="single-val">15</td>
+            <td class="indicator bold">Total No. of Deliveries (13+14)</td>
+            <td colspan="4"></td>
+            <td class="tot"><input type="number" class="computed" id="delivery_total" readonly /></td>
+          </tr>
+          <tr>
+            <td class="single-val">16</td>
+            <td class="indicator bold">Male CH (Excluding Still Birth out of 15)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="male_children_births" value="{{ report.male_children_births if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">17</td>
+            <td class="indicator bold">Female CH (Excluding Still Birth out of 15)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="female_children_births" value="{{ report.female_children_births if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">21</td>
+            <td class="indicator bold">No. of Lab-Tests</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="lab_tests" value="{{ report.lab_tests if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">22</td>
+            <td class="indicator bold">Total No. of Cumulative Inpatients Days</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="cumulative_inpatient_days" value="{{ report.cumulative_inpatient_days if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">23</td>
+            <td class="indicator bold">User Charges Collection during the month (Rs.)</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" step="0.01" name="user_charges_collection" value="{{ report.user_charges_collection if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">24</td>
+            <td class="indicator bold">Number of RSBY Cases during the month</td>
+            <td colspan="4"></td>
+            <td class="single-val"><input type="number" min="0" name="rsby_cases" value="{{ report.rsby_cases if report else 0 }}" /></td>
+          </tr>
+          <tr>
+            <td class="single-val">Note</td>
+            <td colspan="6" class="indicator">
+              Comments of SMO incharge regarding change of functional beds, nil reports, and unusually large/small comparative performance figures should be mentioned in remarks.
+            </td>
+          </tr>
+          <tr>
+            <td class="single-val">Remarks</td>
+            <td colspan="6"><textarea name="remarks" rows="3" placeholder="Maternal/infant death details and any performance comments">{{ hospital_meta.remarks if hospital_meta else '' }}</textarea></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn primary" type="submit">{{ submit_label or 'Submit Hospital Indicator Report' }}</button>
+      <a class="btn ghost" href="{{ cancel_url or url_for('hospital_reports_list') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  (function () {
+    function sumValues(selector) {
+      var total = 0;
+      document.querySelectorAll(selector).forEach(function (el) {
+        total += Number(el.value || 0);
+      });
+      return total;
+    }
+
+    function updateTotals() {
+      var newTotal = sumValues('.out-new');
+      var oldTotal = sumValues('.out-old');
+      var emrTotal = sumValues('.out-emr');
+
+      document.getElementById('out_new_total').value = newTotal;
+      document.getElementById('out_old_total').value = oldTotal;
+      document.getElementById('out_emr_total').value = emrTotal;
+
+      var outM = Number(document.querySelector('[name="outpatients_new_male"]').value || 0) + Number(document.querySelector('[name="outpatients_old_male"]').value || 0) + Number(document.querySelector('[name="outpatients_emergency_male"]').value || 0);
+      var outF = Number(document.querySelector('[name="outpatients_new_female"]').value || 0) + Number(document.querySelector('[name="outpatients_old_female"]').value || 0) + Number(document.querySelector('[name="outpatients_emergency_female"]').value || 0);
+      var outMC = Number(document.querySelector('[name="outpatients_new_male_child"]').value || 0) + Number(document.querySelector('[name="outpatients_old_male_child"]').value || 0) + Number(document.querySelector('[name="outpatients_emergency_male_child"]').value || 0);
+      var outFC = Number(document.querySelector('[name="outpatients_new_female_child"]').value || 0) + Number(document.querySelector('[name="outpatients_old_female_child"]').value || 0) + Number(document.querySelector('[name="outpatients_emergency_female_child"]').value || 0);
+      var outTotal = outM + outF + outMC + outFC;
+
+      document.getElementById('out_m_total').value = outM;
+      document.getElementById('out_f_total').value = outF;
+      document.getElementById('out_mc_total').value = outMC;
+      document.getElementById('out_fc_total').value = outFC;
+      document.getElementById('out_all_total').value = outTotal;
+
+      document.getElementById('adm_total').value = sumValues('.adm-row');
+      document.getElementById('surgery_total').value = sumValues('.surgery');
+      document.getElementById('delivery_total').value = sumValues('.delivery');
+    }
+
+    document.querySelectorAll('.hp-num, .adm-row, .surgery, .delivery').forEach(function (el) {
+      el.addEventListener('input', updateTotals);
+    });
+
+    updateTotals();
+  })();
+</script>
+{% endblock %}

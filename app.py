@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime, timedelta
 import os
+import json
 from dotenv import load_dotenv
 import secrets
 
@@ -148,6 +149,7 @@ class HospitalReport(db.Model):
     cumulative_inpatient_days = db.Column(db.Integer, default=0)
     user_charges_collection = db.Column(db.Float, default=0)
     rsby_cases = db.Column(db.Integer, default=0)
+    remarks = db.Column(db.Text, default='')
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -570,74 +572,77 @@ def like_post(post_id):
     return jsonify({'likes': post.likes, 'success': True})
 
 
+# ==================== HELPERS: HOSPITAL META ====================
+
+def parse_hospital_meta(report):
+    """Parse JSON metadata stored in the remarks column."""
+    default = {"sanctioned_beds": "", "functional_beds": "", "doctors_incharge": "", "remarks": ""}
+    raw = report.remarks or ""
+    if not raw:
+        return default
+    try:
+        payload = json.loads(raw)
+    except (TypeError, ValueError):
+        default["remarks"] = raw
+        return default
+    if not isinstance(payload, dict) or payload.get("_format") != "hospital_meta_v1":
+        default["remarks"] = raw
+        return default
+    return {
+        "sanctioned_beds": (payload.get("sanctioned_beds") or "").strip(),
+        "functional_beds": (payload.get("functional_beds") or "").strip(),
+        "doctors_incharge": (payload.get("doctors_incharge") or "").strip(),
+        "remarks": (payload.get("remarks") or "").strip(),
+    }
+
+
 # ==================== ROUTES: HOSPITAL REPORTS ====================
+
+def _apply_hospital_form(report, form):
+    """Apply form values to a HospitalReport instance and store JSON metadata."""
+    report.hospital_name = form.get('hospital_name', '').strip()
+    report.district = form.get('district', '').strip()
+    report.month_year = form.get('month_year', '').strip()
+    # Outpatients
+    for f in ['outpatients_new_male','outpatients_new_female','outpatients_new_male_child','outpatients_new_female_child',
+              'outpatients_old_male','outpatients_old_female','outpatients_old_male_child','outpatients_old_female_child',
+              'outpatients_emergency_male','outpatients_emergency_female','outpatients_emergency_male_child','outpatients_emergency_female_child',
+              'admissions_male','admissions_female','admissions_male_child','admissions_female_child',
+              'admissions_emergency','medical_legal_cases','same_day_admission_discharge',
+              'tubectomies','vasectomies','minor_surgeries','major_surgeries',
+              'deaths_total','normal_deliveries','caesarean_deliveries','male_children_births','female_children_births',
+              'lab_tests','cumulative_inpatient_days','rsby_cases']:
+        setattr(report, f, form.get(f, 0, type=int))
+    report.user_charges_collection = form.get('user_charges_collection', 0, type=float)
+    report.remarks = json.dumps({
+        "_format": "hospital_meta_v1",
+        "sanctioned_beds": form.get('sanctioned_beds', '').strip(),
+        "functional_beds": form.get('functional_beds', '').strip(),
+        "doctors_incharge": form.get('doctors_incharge', '').strip(),
+        "remarks": form.get('remarks_text', '').strip(),
+    })
+
 
 @app.route('/hospital/report/new', methods=['GET', 'POST'])
 @login_required
 def new_hospital_report():
     user = get_current_user()
-    
+
     if request.method == 'POST':
-        hospital_name = request.form.get('hospital_name', '').strip()
-        district = request.form.get('district', '').strip()
-        month_year = request.form.get('month_year', '').strip()
-        
-        if not all([hospital_name, district, month_year]):
-            flash('Hospital name, district, and month/year are required', 'danger')
+        if not all([request.form.get('hospital_name','').strip(),
+                    request.form.get('district','').strip(),
+                    request.form.get('month_year','').strip()]):
+            flash('Hospital name, district, and month/year are required.', 'danger')
             return redirect(url_for('new_hospital_report'))
-        
-        report = HospitalReport(
-            user_id=user.id,
-            hospital_name=hospital_name,
-            district=district,
-            month_year=month_year,
-            # Outpatients - New
-            outpatients_new_male=request.form.get('outpatients_new_male', 0, type=int),
-            outpatients_new_female=request.form.get('outpatients_new_female', 0, type=int),
-            outpatients_new_male_child=request.form.get('outpatients_new_male_child', 0, type=int),
-            outpatients_new_female_child=request.form.get('outpatients_new_female_child', 0, type=int),
-            # Outpatients - Old
-            outpatients_old_male=request.form.get('outpatients_old_male', 0, type=int),
-            outpatients_old_female=request.form.get('outpatients_old_female', 0, type=int),
-            outpatients_old_male_child=request.form.get('outpatients_old_male_child', 0, type=int),
-            outpatients_old_female_child=request.form.get('outpatients_old_female_child', 0, type=int),
-            # Outpatients - Emergency
-            outpatients_emergency_male=request.form.get('outpatients_emergency_male', 0, type=int),
-            outpatients_emergency_female=request.form.get('outpatients_emergency_female', 0, type=int),
-            outpatients_emergency_male_child=request.form.get('outpatients_emergency_male_child', 0, type=int),
-            outpatients_emergency_female_child=request.form.get('outpatients_emergency_female_child', 0, type=int),
-            # Admissions
-            admissions_male=request.form.get('admissions_male', 0, type=int),
-            admissions_female=request.form.get('admissions_female', 0, type=int),
-            admissions_male_child=request.form.get('admissions_male_child', 0, type=int),
-            admissions_female_child=request.form.get('admissions_female_child', 0, type=int),
-            admissions_emergency=request.form.get('admissions_emergency', 0, type=int),
-            medical_legal_cases=request.form.get('medical_legal_cases', 0, type=int),
-            same_day_admission_discharge=request.form.get('same_day_admission_discharge', 0, type=int),
-            # Surgeries
-            tubectomies=request.form.get('tubectomies', 0, type=int),
-            vasectomies=request.form.get('vasectomies', 0, type=int),
-            minor_surgeries=request.form.get('minor_surgeries', 0, type=int),
-            major_surgeries=request.form.get('major_surgeries', 0, type=int),
-            # Deaths & Deliveries
-            deaths_total=request.form.get('deaths_total', 0, type=int),
-            normal_deliveries=request.form.get('normal_deliveries', 0, type=int),
-            caesarean_deliveries=request.form.get('caesarean_deliveries', 0, type=int),
-            male_children_births=request.form.get('male_children_births', 0, type=int),
-            female_children_births=request.form.get('female_children_births', 0, type=int),
-            # Lab & Misc
-            lab_tests=request.form.get('lab_tests', 0, type=int),
-            cumulative_inpatient_days=request.form.get('cumulative_inpatient_days', 0, type=int),
-            user_charges_collection=request.form.get('user_charges_collection', 0, type=float),
-            rsby_cases=request.form.get('rsby_cases', 0, type=int)
-        )
+
+        report = HospitalReport(user_id=user.id)
+        _apply_hospital_form(report, request.form)
         db.session.add(report)
         db.session.commit()
-        
-        flash('Hospital report submitted successfully', 'success')
+        flash('Hospital report submitted successfully.', 'success')
         return redirect(url_for('hospital_reports_list'))
-    
-    return render_template('hospital_report_form.html', user=user)
+
+    return render_template('hospital_report_form.html', user=user, report=None, hospital_meta={}, form_action=url_for('new_hospital_report'))
 
 
 @app.route('/hospital/reports')
@@ -653,12 +658,49 @@ def hospital_reports_list():
 def view_hospital_report(report_id):
     report = HospitalReport.query.get_or_404(report_id)
     user = get_current_user()
-    
     if report.user_id != user.id:
-        flash('You do not have permission to view this report', 'danger')
+        flash('You do not have permission to view this report.', 'danger')
         return redirect(url_for('hospital_reports_list'))
-    
-    return render_template('hospital_report_view.html', report=report, user=user)
+    return render_template('hospital_report_view.html', report=report, user=user, hospital_meta=parse_hospital_meta(report))
+
+
+@app.route('/hospital/report/<int:report_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_hospital_report(report_id):
+    report = HospitalReport.query.get_or_404(report_id)
+    user = get_current_user()
+    if report.user_id != user.id:
+        flash('You do not have permission to edit this report.', 'danger')
+        return redirect(url_for('hospital_reports_list'))
+
+    if request.method == 'POST':
+        if not all([request.form.get('hospital_name','').strip(),
+                    request.form.get('district','').strip(),
+                    request.form.get('month_year','').strip()]):
+            flash('Hospital name, district, and month/year are required.', 'danger')
+            return redirect(url_for('edit_hospital_report', report_id=report_id))
+        _apply_hospital_form(report, request.form)
+        db.session.commit()
+        flash('Report updated successfully.', 'success')
+        return redirect(url_for('view_hospital_report', report_id=report.id))
+
+    return render_template('hospital_report_form.html', user=user, report=report,
+                           hospital_meta=parse_hospital_meta(report),
+                           form_action=url_for('edit_hospital_report', report_id=report.id))
+
+
+@app.route('/hospital/report/<int:report_id>/delete', methods=['POST'])
+@login_required
+def delete_hospital_report(report_id):
+    report = HospitalReport.query.get_or_404(report_id)
+    user = get_current_user()
+    if report.user_id != user.id:
+        flash('You do not have permission to delete this report.', 'danger')
+        return redirect(url_for('hospital_reports_list'))
+    db.session.delete(report)
+    db.session.commit()
+    flash('Report deleted.', 'info')
+    return redirect(url_for('hospital_reports_list'))
 
 
 # ==================== ROUTES: API ====================

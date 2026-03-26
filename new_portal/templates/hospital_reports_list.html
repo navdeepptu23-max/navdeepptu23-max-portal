@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}{{ title or 'My Hospital Indicator Reports' }} | Nova Portal{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>{{ title or 'My Hospital Indicator Reports' }}</h2>
+  <div class="cta-row">
+    {% if admin_mode %}
+      <a class="btn ghost" href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+      <a class="btn ghost" href="{{ url_for('admin_consolidated_reports', module='hospital') }}">Module Summary</a>
+    {% else %}
+      <a class="btn primary" href="{{ url_for('new_hospital_report') }}">Add Hospital Indicator Report</a>
+    {% endif %}
+  </div>
+
+  {% if reports %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Hospital</th>
+          {% if show_owner %}
+            <th>Owner</th>
+          {% endif %}
+          <th>District</th>
+          <th>Month and Year</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for report in reports %}
+          <tr>
+            <td>{{ report.hospital_name }}</td>
+            {% if show_owner %}
+              <td>{{ report.hospital_owner.username }}</td>
+            {% endif %}
+            <td>{{ report.district }}</td>
+            <td>{{ report.month_year }}</td>
+            <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <a href="{{ url_for('admin_hospital_report_view', report_id=report.id) if admin_mode else url_for('view_hospital_report', report_id=report.id) }}">Open</a>
+              <span class="action-sep">|</span>
+              <a href="{{ url_for('admin_hospital_report_edit', report_id=report.id) if admin_mode else url_for('edit_hospital_report', report_id=report.id) }}">Edit</a>
+              <span class="action-sep">|</span>
+              <form class="inline-form" method="post" action="{{ url_for('admin_hospital_report_delete', report_id=report.id) if admin_mode else url_for('delete_hospital_report', report_id=report.id) }}" onsubmit="return confirm('Delete this hospital indicator report?');">
+                <button class="link-btn danger" type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ 'No hospital indicator reports available.' if admin_mode else 'No hospital indicator reports yet.' }}</p>
+  {% endif %}
+</section>
+{% endblock %}

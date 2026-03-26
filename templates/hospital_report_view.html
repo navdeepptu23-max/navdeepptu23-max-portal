@@ -1,9 +1,259 @@
 {% extends "base.html" %}
-
+{% block title %}Hospital Report — {{ report.hospital_name }} | Portal{% endblock %}
+{% block extra_css %}
+<style>
+.hpi-wrapper{overflow-x:auto;margin-top:1rem;}
+.hpi-table{border-collapse:collapse;width:100%;min-width:820px;font-size:13px;font-family:'Segoe UI',sans-serif;background:#fff;}
+.hpi-table th,.hpi-table td{border:1.5px solid #222;padding:5px 7px;vertical-align:middle;}
+.hpi-table thead th{background:#f0f0f0;font-weight:700;text-align:center;}
+.hpi-table .sr{text-align:center;font-weight:700;width:44px;}
+.hpi-table .ind{font-weight:700;}
+.hpi-table .tot-row{background:#f8f8e8;font-weight:700;}
+.hpi-table .num{text-align:right;}
+.hpi-table .comp{background:#e8f0ff;font-weight:700;text-align:right;color:#1a237e;}
+.hpi-title{text-align:center;margin-bottom:8px;}
+.hpi-title h3{font-size:1rem;margin:2px 0;}
+.hpi-meta td{font-weight:700;padding:5px 8px;}
+.action-bar{margin-top:1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;}
+</style>
+{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-lg-11 mx-auto">
+{% set out_new_tot = report.outpatients_new_male + report.outpatients_new_female + report.outpatients_new_male_child + report.outpatients_new_female_child %}
+{% set out_old_tot = report.outpatients_old_male + report.outpatients_old_female + report.outpatients_old_male_child + report.outpatients_old_female_child %}
+{% set out_emr_tot = report.outpatients_emergency_male + report.outpatients_emergency_female + report.outpatients_emergency_male_child + report.outpatients_emergency_female_child %}
+{% set out_m_tot   = report.outpatients_new_male + report.outpatients_old_male + report.outpatients_emergency_male %}
+{% set out_f_tot   = report.outpatients_new_female + report.outpatients_old_female + report.outpatients_emergency_female %}
+{% set out_mc_tot  = report.outpatients_new_male_child + report.outpatients_old_male_child + report.outpatients_emergency_male_child %}
+{% set out_fc_tot  = report.outpatients_new_female_child + report.outpatients_old_female_child + report.outpatients_emergency_female_child %}
+{% set out_all_tot = out_new_tot + out_old_tot + out_emr_tot %}
+{% set adm_tot     = report.admissions_male + report.admissions_female + report.admissions_male_child + report.admissions_female_child %}
+{% set surg_tot    = report.tubectomies + report.vasectomies + report.minor_surgeries + report.major_surgeries %}
+{% set deliv_tot   = report.normal_deliveries + report.caesarean_deliveries %}
+
+<div class="container" style="max-width:1100px;margin-top:2rem;">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white text-center">
+      <strong>PROFORMA-I</strong><br>
+      HEALTH MANAGEMENT INFORMATION SYSTEM MONTHLY REPORT FOR HOSPITAL<br>
+      <strong>HOSPITAL PERFORMANCE INDICATOR (HPI)</strong>
+    </div>
+    <div class="card-body p-3">
+      <div class="hpi-wrapper">
+        <table class="hpi-table">
+          <tbody class="hpi-meta">
+            <tr>
+              <td colspan="2">Name of Hospital: {{ report.hospital_name }}</td>
+              <td colspan="2">Sanctioned Beds: {{ hospital_meta.sanctioned_beds or '.........' }}</td>
+              <td colspan="3">Month &amp; Year: {{ report.month_year }}</td>
+            </tr>
+            <tr>
+              <td colspan="2">District: {{ report.district }}</td>
+              <td colspan="2">Functional Beds: {{ hospital_meta.functional_beds or '.........' }}</td>
+              <td colspan="3">Doctors Incharge: {{ hospital_meta.doctors_incharge or '' }}</td>
+            </tr>
+          </tbody>
+          <thead>
+            <tr>
+              <th class="sr">Sr.</th>
+              <th>HP Indicator</th>
+              <th>Male</th>
+              <th>Female</th>
+              <th>Male Child &lt;14 Years</th>
+              <th>Female Child &lt;14 Years</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row 1 -->
+            <tr>
+              <td class="sr" rowspan="4">1</td>
+              <td class="ind">NO. OF OUTPATIENTS: NEW</td>
+              <td class="num">{{ report.outpatients_new_male }}</td>
+              <td class="num">{{ report.outpatients_new_female }}</td>
+              <td class="num">{{ report.outpatients_new_male_child }}</td>
+              <td class="num">{{ report.outpatients_new_female_child }}</td>
+              <td class="comp">{{ out_new_tot }}</td>
+            </tr>
+            <tr>
+              <td class="ind" style="text-align:right;">OLD</td>
+              <td class="num">{{ report.outpatients_old_male }}</td>
+              <td class="num">{{ report.outpatients_old_female }}</td>
+              <td class="num">{{ report.outpatients_old_male_child }}</td>
+              <td class="num">{{ report.outpatients_old_female_child }}</td>
+              <td class="comp">{{ out_old_tot }}</td>
+            </tr>
+            <tr>
+              <td class="ind" style="text-align:right;">EMERGENCY</td>
+              <td class="num">{{ report.outpatients_emergency_male }}</td>
+              <td class="num">{{ report.outpatients_emergency_female }}</td>
+              <td class="num">{{ report.outpatients_emergency_male_child }}</td>
+              <td class="num">{{ report.outpatients_emergency_female_child }}</td>
+              <td class="comp">{{ out_emr_tot }}</td>
+            </tr>
+            <tr class="tot-row">
+              <td class="ind" style="text-align:right;">TOTAL</td>
+              <td class="comp">{{ out_m_tot }}</td>
+              <td class="comp">{{ out_f_tot }}</td>
+              <td class="comp">{{ out_mc_tot }}</td>
+              <td class="comp">{{ out_fc_tot }}</td>
+              <td class="comp">{{ out_all_tot }}</td>
+            </tr>
+            <!-- Row 2 -->
+            <tr>
+              <td class="sr">2</td>
+              <td class="ind">NO OF ADMISSIONS DURING THE MONTH</td>
+              <td class="num">{{ report.admissions_male }}</td>
+              <td class="num">{{ report.admissions_female }}</td>
+              <td class="num">{{ report.admissions_male_child }}</td>
+              <td class="num">{{ report.admissions_female_child }}</td>
+              <td class="comp">{{ adm_tot }}</td>
+            </tr>
+            <!-- Row 3 -->
+            <tr>
+              <td class="sr">3</td>
+              <td class="ind">NO. OF ADMISSIONS THROUGH EMERGENCY (OUT OF 2)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.admissions_emergency }}</td>
+            </tr>
+            <!-- Row 4 -->
+            <tr>
+              <td class="sr">4</td>
+              <td class="ind">NO. OF MEDICAL LEGAL CASES ADMITTED (OUT OF 2)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.medical_legal_cases }}</td>
+            </tr>
+            <!-- Row 5 -->
+            <tr>
+              <td class="sr">5</td>
+              <td class="ind">NO. OF PATIENTS ADMITTED AND DISCHARGED ON THE SAME DAY (OUT OF 2)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.same_day_admission_discharge }}</td>
+            </tr>
+            <!-- Row 6 -->
+            <tr>
+              <td class="sr">6</td>
+              <td class="ind">NO. OF TUBECTOMIES INCLUDING LAPAROSCOPIC</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.tubectomies }}</td>
+            </tr>
+            <!-- Row 7 -->
+            <tr>
+              <td class="sr">7</td>
+              <td class="ind">NO OF VASECTOMIES</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.vasectomies }}</td>
+            </tr>
+            <!-- Row 8 -->
+            <tr>
+              <td class="sr">8</td>
+              <td class="ind">NO. OF MINOR SURGERIES (EXCLUDING VASECTOMIES)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.minor_surgeries }}</td>
+            </tr>
+            <!-- Row 9 -->
+            <tr>
+              <td class="sr">9</td>
+              <td class="ind">NO. OF MAJOR SURGERIES (EXCLUDING TUBECTOMIES)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.major_surgeries }}</td>
+            </tr>
+            <!-- Row 10 -->
+            <tr class="tot-row">
+              <td class="sr">10</td>
+              <td class="ind">TOTAL NO. OF SURGERIES (6+7+8+9)</td>
+              <td colspan="4"></td>
+              <td class="comp">{{ surg_tot }}</td>
+            </tr>
+            <!-- Row 11 -->
+            <tr>
+              <td class="sr">11</td>
+              <td class="ind">NO. OF DEATHS (Please mention no of maternal &amp; infant hospital deaths in the remarks column separately)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.deaths_total }}</td>
+            </tr>
+            <!-- Row 13 -->
+            <tr>
+              <td class="sr">13</td>
+              <td class="ind">NO. OF NORMAL DELIVERIES</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.normal_deliveries }}</td>
+            </tr>
+            <!-- Row 14 -->
+            <tr>
+              <td class="sr">14</td>
+              <td class="ind">NO. OF CAESAREAN DELIVERIES</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.caesarean_deliveries }}</td>
+            </tr>
+            <!-- Row 15 -->
+            <tr class="tot-row">
+              <td class="sr">15</td>
+              <td class="ind">TOTAL NO. OF DELIVERIES (13+14)</td>
+              <td colspan="4"></td>
+              <td class="comp">{{ deliv_tot }}</td>
+            </tr>
+            <!-- Row 16 -->
+            <tr>
+              <td class="sr">16</td>
+              <td class="ind">MALE CH (EXCLUDING STILL BIRTH OUT OF 15)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.male_children_births }}</td>
+            </tr>
+            <!-- Row 17 -->
+            <tr>
+              <td class="sr">17</td>
+              <td class="ind">FEMALE CH (EXCLUDING STILL BIRTH OUT OF 15)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.female_children_births }}</td>
+            </tr>
+            <!-- Row 21 -->
+            <tr>
+              <td class="sr">21</td>
+              <td class="ind">NO. OF LAB-TESTS</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.lab_tests }}</td>
+            </tr>
+            <!-- Row 22 -->
+            <tr>
+              <td class="sr">22</td>
+              <td class="ind">TOTAL NO. OF CUMULATIVE INPATIENTS DAYS</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.cumulative_inpatient_days }}</td>
+            </tr>
+            <!-- Row 23 -->
+            <tr>
+              <td class="sr">23</td>
+              <td class="ind">User Charges Collection during the month (in Rs.)</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.user_charges_collection }}</td>
+            </tr>
+            <!-- Row 24 -->
+            <tr>
+              <td class="sr">24</td>
+              <td class="ind">Number of RSBY Cases during the month</td>
+              <td colspan="4"></td>
+              <td class="num">{{ report.rsby_cases }}</td>
+            </tr>
+            <!-- Note -->
+            <tr>
+              <td><strong>Note:</strong></td>
+              <td colspan="6">{{ hospital_meta.remarks or 'Comments of SMO incharge regarding change of functional beds if any, nil reports and unusually large or small comparative figures regarding performance of any department of the hospital should be mentioned in the remarks column.' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="action-bar">
+        <a href="{{ url_for('hospital_reports_list') }}" class="btn btn-secondary">&larr; Back</a>
+        <a href="{{ url_for('edit_hospital_report', report_id=report.id) }}" class="btn btn-primary">&#9998; Edit</a>
+        <form method="post" action="{{ url_for('delete_hospital_report', report_id=report.id) }}" onsubmit="return confirm('Delete this report?');" style="display:inline;">
+          <button class="btn btn-danger" type="submit">&#128465; Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
             <!-- Header -->
             <div class="card shadow-sm mb-4">
                 <div class="card-body">

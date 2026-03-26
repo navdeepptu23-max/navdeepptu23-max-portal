@@ -78,6 +78,7 @@ class User(db.Model):
 
     cbhi_reports = db.relationship("CbhiReport", backref="cbhi_owner", lazy=True, cascade="all, delete-orphan")
     ncd_reports = db.relationship("NcdReport", backref="ncd_owner", lazy=True, cascade="all, delete-orphan")
+    hospital_reports = db.relationship("HospitalReport", backref="hospital_owner", lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -190,6 +191,92 @@ class NcdReport(db.Model):
     official_email = db.Column(db.String(255), default="")
     official_phone = db.Column(db.String(50), default="")
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
+class HospitalReport(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    hospital_name = db.Column(db.String(255), nullable=False)
+    district = db.Column(db.String(100), nullable=False)
+    month_year = db.Column(db.String(20), nullable=False)
+
+    outpatients_new_male = db.Column(db.Integer, default=0)
+    outpatients_new_female = db.Column(db.Integer, default=0)
+    outpatients_new_male_child = db.Column(db.Integer, default=0)
+    outpatients_new_female_child = db.Column(db.Integer, default=0)
+
+    outpatients_old_male = db.Column(db.Integer, default=0)
+    outpatients_old_female = db.Column(db.Integer, default=0)
+    outpatients_old_male_child = db.Column(db.Integer, default=0)
+    outpatients_old_female_child = db.Column(db.Integer, default=0)
+
+    outpatients_emergency_male = db.Column(db.Integer, default=0)
+    outpatients_emergency_female = db.Column(db.Integer, default=0)
+    outpatients_emergency_male_child = db.Column(db.Integer, default=0)
+    outpatients_emergency_female_child = db.Column(db.Integer, default=0)
+
+    admissions_male = db.Column(db.Integer, default=0)
+    admissions_female = db.Column(db.Integer, default=0)
+    admissions_male_child = db.Column(db.Integer, default=0)
+    admissions_female_child = db.Column(db.Integer, default=0)
+
+    admissions_emergency = db.Column(db.Integer, default=0)
+    medical_legal_cases = db.Column(db.Integer, default=0)
+    same_day_admission_discharge = db.Column(db.Integer, default=0)
+
+    tubectomies = db.Column(db.Integer, default=0)
+    vasectomies = db.Column(db.Integer, default=0)
+    minor_surgeries = db.Column(db.Integer, default=0)
+    major_surgeries = db.Column(db.Integer, default=0)
+
+    deaths_total = db.Column(db.Integer, default=0)
+    normal_deliveries = db.Column(db.Integer, default=0)
+    caesarean_deliveries = db.Column(db.Integer, default=0)
+    male_children_births = db.Column(db.Integer, default=0)
+    female_children_births = db.Column(db.Integer, default=0)
+
+    lab_tests = db.Column(db.Integer, default=0)
+    cumulative_inpatient_days = db.Column(db.Integer, default=0)
+    user_charges_collection = db.Column(db.Float, default=0)
+    rsby_cases = db.Column(db.Integer, default=0)
+
+    remarks = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+
+HOSPITAL_INTEGER_FIELDS = [
+    "outpatients_new_male",
+    "outpatients_new_female",
+    "outpatients_new_male_child",
+    "outpatients_new_female_child",
+    "outpatients_old_male",
+    "outpatients_old_female",
+    "outpatients_old_male_child",
+    "outpatients_old_female_child",
+    "outpatients_emergency_male",
+    "outpatients_emergency_female",
+    "outpatients_emergency_male_child",
+    "outpatients_emergency_female_child",
+    "admissions_male",
+    "admissions_female",
+    "admissions_male_child",
+    "admissions_female_child",
+    "admissions_emergency",
+    "medical_legal_cases",
+    "same_day_admission_discharge",
+    "tubectomies",
+    "vasectomies",
+    "minor_surgeries",
+    "major_surgeries",
+    "deaths_total",
+    "normal_deliveries",
+    "caesarean_deliveries",
+    "male_children_births",
+    "female_children_births",
+    "lab_tests",
+    "cumulative_inpatient_days",
+    "rsby_cases",
+]
 
 
 def build_cbhi_payload(form_source):
@@ -550,10 +637,11 @@ def create_ncd_excel(report, rows, totals):
     return output
 
 
-def build_consolidated_rows(cbhi_reports=None, ncd_reports=None, include_owner=False):
+def build_consolidated_rows(cbhi_reports=None, ncd_reports=None, hospital_reports=None, include_owner=False):
     rows = []
     cbhi_reports = cbhi_reports or []
     ncd_reports = ncd_reports or []
+    hospital_reports = hospital_reports or []
 
     for report in cbhi_reports:
         _, totals = cbhi_rows(report)
@@ -595,6 +683,40 @@ def build_consolidated_rows(cbhi_reports=None, ncd_reports=None, include_owner=F
             row["view_url"] = url_for("admin_ncd_report_view", report_id=report.id)
         rows.append(row)
 
+    for report in hospital_reports:
+        total_outpatients = (
+            report.outpatients_new_male
+            + report.outpatients_new_female
+            + report.outpatients_new_male_child
+            + report.outpatients_new_female_child
+            + report.outpatients_old_male
+            + report.outpatients_old_female
+            + report.outpatients_old_male_child
+            + report.outpatients_old_female_child
+            + report.outpatients_emergency_male
+            + report.outpatients_emergency_female
+            + report.outpatients_emergency_male_child
+            + report.outpatients_emergency_female_child
+        )
+        total_admissions = report.admissions_male + report.admissions_female + report.admissions_male_child + report.admissions_female_child
+        row = {
+            "report_type": "Hospital Indicator",
+            "institution": report.hospital_name,
+            "district": report.district,
+            "month_year": report.month_year,
+            "metric_one_label": "Outpatients",
+            "metric_one": total_outpatients,
+            "metric_two_label": "Admissions",
+            "metric_two": total_admissions,
+            "created_at": report.created_at,
+            "view_url": url_for("view_hospital_report", report_id=report.id),
+        }
+        if include_owner:
+            row["owner_username"] = report.hospital_owner.username
+            row["owner_email"] = report.hospital_owner.email
+            row["view_url"] = url_for("admin_hospital_report_view", report_id=report.id)
+        rows.append(row)
+
     rows.sort(key=lambda item: item["created_at"], reverse=True)
     return rows
 
@@ -603,6 +725,7 @@ CONSOLIDATED_MODULE_LABELS = {
     "all": "All Modules",
     "cbhi1": "CBHI Form-1",
     "cbhi2": "CBHI Form-2",
+    "hospital": "Hospital Indicator",
 }
 
 
@@ -736,6 +859,55 @@ def current_admin():
     return None
 
 
+def apply_hospital_form_values(report, form_source):
+    report.hospital_name = (form_source.get("hospital_name") or "").strip()
+    report.district = (form_source.get("district") or "").strip()
+    report.month_year = (form_source.get("month_year") or "").strip()
+    remarks_text = (form_source.get("remarks") or "").strip()
+    report.remarks = json.dumps(
+        {
+            "_format": "hospital_meta_v1",
+            "sanctioned_beds": (form_source.get("sanctioned_beds") or "").strip(),
+            "functional_beds": (form_source.get("functional_beds") or "").strip(),
+            "doctors_incharge": (form_source.get("doctors_incharge") or "").strip(),
+            "remarks": remarks_text,
+        }
+    )
+
+    for field in HOSPITAL_INTEGER_FIELDS:
+        setattr(report, field, form_source.get(field, 0, type=int))
+
+    report.user_charges_collection = form_source.get("user_charges_collection", 0, type=float)
+
+
+def parse_hospital_meta(report):
+    default_meta = {
+        "sanctioned_beds": "",
+        "functional_beds": "",
+        "doctors_incharge": "",
+        "remarks": report.remarks or "",
+    }
+
+    raw = report.remarks or ""
+    if not raw:
+        return default_meta
+
+    try:
+        payload = json.loads(raw)
+    except (TypeError, ValueError):
+        return default_meta
+
+    if not isinstance(payload, dict) or payload.get("_format") != "hospital_meta_v1":
+        return default_meta
+
+    return {
+        "sanctioned_beds": (payload.get("sanctioned_beds") or "").strip(),
+        "functional_beds": (payload.get("functional_beds") or "").strip(),
+        "doctors_incharge": (payload.get("doctors_incharge") or "").strip(),
+        "remarks": (payload.get("remarks") or "").strip(),
+    }
+
+
 def find_user_by_credential(credential: str):
     """Find user by username, email, or numeric user ID."""
     credential = (credential or "").strip()
@@ -849,6 +1021,7 @@ def dashboard():
     user = current_user()
     cbhi_reports = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
+    hospital_reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
 
     cbhi_summaries = []
     for report in cbhi_reports[:5]:
@@ -875,6 +1048,7 @@ def dashboard():
         cbhi_summaries=cbhi_summaries,
         ncd_reports=ncd_reports,
         ncd_summaries=ncd_summaries,
+        hospital_reports=hospital_reports,
     )
 
 
@@ -1235,6 +1409,95 @@ def ncd_report_excel(report_id):
     return response
 
 
+@app.route("/hospital/report/new", methods=["GET", "POST"])
+@login_required
+def new_hospital_report():
+    user = current_user()
+
+    if request.method == "POST":
+        report = HospitalReport(user_id=user.id)
+        apply_hospital_form_values(report, request.form)
+
+        if not all([report.hospital_name, report.district, report.month_year]):
+            flash("Hospital name, district, and month/year are required.", "danger")
+            return redirect(url_for("new_hospital_report"))
+
+        db.session.add(report)
+        db.session.commit()
+        flash("Hospital indicator report submitted.", "success")
+        return redirect(url_for("hospital_reports_list"))
+
+    return render_template(
+        "hospital_report_form.html",
+        user=user,
+        hospital_meta={"sanctioned_beds": "", "functional_beds": "", "doctors_incharge": "", "remarks": ""},
+    )
+
+
+@app.route("/hospital/reports")
+@login_required
+def hospital_reports_list():
+    user = current_user()
+    reports = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    return render_template("hospital_reports_list.html", user=user, reports=reports)
+
+
+@app.route("/hospital/report/<int:report_id>")
+@login_required
+def view_hospital_report(report_id):
+    user = current_user()
+    report = HospitalReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission to view this report.", "danger")
+        return redirect(url_for("hospital_reports_list"))
+    return render_template("hospital_report_view.html", user=user, report=report, hospital_meta=parse_hospital_meta(report))
+
+
+@app.route("/hospital/report/<int:report_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_hospital_report(report_id):
+    user = current_user()
+    report = HospitalReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission to edit this report.", "danger")
+        return redirect(url_for("hospital_reports_list"))
+
+    if request.method == "POST":
+        apply_hospital_form_values(report, request.form)
+        if not all([report.hospital_name, report.district, report.month_year]):
+            flash("Hospital name, district, and month/year are required.", "danger")
+            return redirect(url_for("edit_hospital_report", report_id=report.id))
+
+        db.session.commit()
+        flash("Hospital indicator report updated.", "success")
+        return redirect(url_for("view_hospital_report", report_id=report.id))
+
+    return render_template(
+        "hospital_report_form.html",
+        user=user,
+        report=report,
+        hospital_meta=parse_hospital_meta(report),
+        form_action=url_for("edit_hospital_report", report_id=report.id),
+        submit_label="Save Hospital Indicator Report",
+        cancel_url=url_for("view_hospital_report", report_id=report.id),
+    )
+
+
+@app.route("/hospital/report/<int:report_id>/delete", methods=["POST"])
+@login_required
+def delete_hospital_report(report_id):
+    user = current_user()
+    report = HospitalReport.query.get_or_404(report_id)
+    if report.user_id != user.id:
+        flash("You do not have permission to delete this report.", "danger")
+        return redirect(url_for("hospital_reports_list"))
+
+    db.session.delete(report)
+    db.session.commit()
+    flash("Hospital indicator report deleted.", "info")
+    return redirect(url_for("hospital_reports_list"))
+
+
 @app.route("/reports/consolidated")
 @login_required
 def consolidated_reports():
@@ -1242,7 +1505,8 @@ def consolidated_reports():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
+    hospital_reports_list = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports.html",
@@ -1262,7 +1526,8 @@ def consolidated_reports_print():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
+    hospital_reports_list = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports_print.html",
@@ -1281,7 +1546,8 @@ def consolidated_reports_csv():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
+    hospital_reports_list = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
 
     output = io.StringIO()
@@ -1308,7 +1574,8 @@ def consolidated_reports_excel():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.filter_by(user_id=user.id).order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.filter_by(user_id=user.id).order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list)
+    hospital_reports_list = HospitalReport.query.filter_by(user_id=user.id).order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list)
     filtered_rows = filter_consolidated_rows(rows, module)
     output = build_consolidated_excel(f"My Consolidated Reports - {CONSOLIDATED_MODULE_LABELS[module]}", filtered_rows)
 
@@ -1351,11 +1618,13 @@ def admin_dashboard():
     users = User.query.order_by(User.created_at.desc()).all()
     cbhi_reports = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
+    hospital_reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
     stats = {
         "total_users": len(users),
-        "total_reports": len(cbhi_reports) + len(ncd_reports),
+        "total_reports": len(cbhi_reports) + len(ncd_reports) + len(hospital_reports),
         "total_cbhi_reports": len(cbhi_reports),
         "total_ncd_reports": len(ncd_reports),
+        "total_hospital_reports": len(hospital_reports),
     }
     cbhi_summaries = []
     for report in cbhi_reports[:10]:
@@ -1380,6 +1649,7 @@ def admin_dashboard():
         users=users,
         cbhi_reports=cbhi_reports,
         ncd_reports=ncd_reports,
+        hospital_reports=hospital_reports,
         cbhi_summaries=cbhi_summaries,
         ncd_summaries=ncd_summaries,
         stats=stats,
@@ -1768,13 +2038,80 @@ def admin_ncd_reports_export():
     return response
 
 
+@app.route("/admin/hospital-report/<int:report_id>")
+@admin_required
+def admin_hospital_report_view(report_id):
+    report = HospitalReport.query.get_or_404(report_id)
+    return render_template(
+        "hospital_report_view.html",
+        user=current_user(),
+        admin=current_admin(),
+        admin_mode=True,
+        report=report,
+        hospital_meta=parse_hospital_meta(report),
+    )
+
+
+@app.route("/admin/hospital-report/<int:report_id>/edit", methods=["GET", "POST"])
+@admin_required
+def admin_hospital_report_edit(report_id):
+    report = HospitalReport.query.get_or_404(report_id)
+
+    if request.method == "POST":
+        apply_hospital_form_values(report, request.form)
+        if not all([report.hospital_name, report.district, report.month_year]):
+            flash("Hospital name, district, and month/year are required.", "danger")
+            return redirect(url_for("admin_hospital_report_edit", report_id=report.id))
+
+        db.session.commit()
+        flash("Hospital indicator report updated.", "success")
+        return redirect(url_for("admin_hospital_report_view", report_id=report.id))
+
+    return render_template(
+        "hospital_report_form.html",
+        user=current_user(),
+        admin=current_admin(),
+        report=report,
+        hospital_meta=parse_hospital_meta(report),
+        form_action=url_for("admin_hospital_report_edit", report_id=report.id),
+        submit_label="Save Hospital Indicator Report",
+        cancel_url=url_for("admin_hospital_report_view", report_id=report.id),
+    )
+
+
+@app.route("/admin/hospital-report/<int:report_id>/delete", methods=["POST"])
+@admin_required
+def admin_hospital_report_delete(report_id):
+    report = HospitalReport.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    flash("Hospital indicator report deleted.", "info")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/hospital-reports")
+@admin_required
+def admin_hospital_reports():
+    reports = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    return render_template(
+        "hospital_reports_list.html",
+        user=current_user(),
+        admin=current_admin(),
+        reports=reports,
+        admin_mode=True,
+        show_owner=True,
+        title="Admin Hospital Indicator Reports",
+    )
+
+
 @app.route("/admin/reports/consolidated")
 @admin_required
 def admin_consolidated_reports():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
+    hospital_reports_list = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports.html",
@@ -1793,7 +2130,8 @@ def admin_consolidated_reports_print():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
+    hospital_reports_list = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
     return render_template(
         "consolidated_reports_print.html",
@@ -1811,7 +2149,8 @@ def admin_consolidated_reports_csv():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
+    hospital_reports_list = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
 
     output = io.StringIO()
@@ -1837,7 +2176,8 @@ def admin_consolidated_reports_excel():
     module = normalized_module_filter(request.args.get("module"))
     cbhi_reports_list = CbhiReport.query.order_by(CbhiReport.created_at.desc()).all()
     ncd_reports_list = NcdReport.query.order_by(NcdReport.created_at.desc()).all()
-    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, include_owner=True)
+    hospital_reports_list = HospitalReport.query.order_by(HospitalReport.created_at.desc()).all()
+    rows = build_consolidated_rows(cbhi_reports_list, ncd_reports_list, hospital_reports_list, include_owner=True)
     filtered_rows = filter_consolidated_rows(rows, module)
     output = build_consolidated_excel(f"Admin Consolidated Reports - {CONSOLIDATED_MODULE_LABELS[module]}", filtered_rows, include_owner=True)
 
