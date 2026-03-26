@@ -40,6 +40,44 @@
       <p>{{ stats.total_ncd_reports }}</p>
     </article>
   </div>
+
+  <h3 class="section-title">Registered Users</h3>
+  {% if users %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Registered On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users[:15] %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ 'Admin' if u.is_admin else 'User' }}</td>
+            <td>{{ 'Active' if u.is_active else 'Inactive' }}</td>
+            <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <a href="{{ url_for('admin_user_reset_password', user_id=u.id) }}">Reset Password</a>
+              <span class="action-sep">|</span>
+              <a href="{{ url_for('admin_users') }}">Manage</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if users|length > 15 %}
+      <p style="margin-top:.5rem;">Showing first 15 users. <a href="{{ url_for('admin_users') }}">View all users</a>.</p>
+    {% endif %}
+  {% else %}
+    <p>No registered users found.</p>
+  {% endif %}
+
   <h3 class="section-title">Recent CBHI Form-1 Reports</h3>
   {% if cbhi_reports %}
     <table class="table">
