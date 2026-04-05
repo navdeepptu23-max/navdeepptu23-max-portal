@@ -345,6 +345,7 @@ def cbhi_rows(report):
             "sr_no": sr_no,
             "disease_name": disease_name,
             "icd_code": icd_code,
+            "code": icd_code,
             "general_opd_m": int(values.get("general_opd_m", 0) or 0),
             "general_opd_f": int(values.get("general_opd_f", 0) or 0),
             "general_opd_tr": int(values.get("general_opd_tr", 0) or 0),
@@ -404,6 +405,7 @@ def ncd_rows(report):
             "sr_no": sr_no,
             "disease_name": disease_name,
             "icd_code": icd_code,
+            "code": icd_code,
             "general_opd_m": int(values.get("general_opd_m", 0) or 0),
             "general_opd_f": int(values.get("general_opd_f", 0) or 0),
             "general_opd_tr": int(values.get("general_opd_tr", 0) or 0),
@@ -1902,6 +1904,59 @@ def admin_cbhi_report_delete(report_id):
     return redirect(url_for("admin_dashboard"))
 
 
+@app.route("/admin/cbhi-report/<int:report_id>/export/csv")
+@admin_required
+def admin_cbhi_report_csv(report_id):
+    report = CbhiReport.query.get_or_404(report_id)
+    rows, totals = cbhi_rows(report)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["CENTRAL BUREAU OF HEALTH INTELLIGENCE (CBHI)", "ANNEXURE-B", "FORM-1"])
+    writer.writerow(["MONTHLY REPORT ON INSTITUTIONAL CASES AND DEATHS IN THE REPORTING UNIT DUE TO COMMUNICABLE DISEASES"])
+    writer.writerow([f"Month: {report.month}", f"Year: {report.year}"])
+    writer.writerow([f"Name of Health Establishment: {report.health_establishment_name}"])
+    writer.writerow([f"Address / Phone: {report.postal_address_phone}"])
+    writer.writerow([
+        "Sr. No.", "Disease Name", "ICD Code",
+        "General OPD M", "General OPD F", "General OPD Tr", "General OPD Total",
+        "Emergency OPD M", "Emergency OPD F", "Emergency OPD Tr", "Emergency OPD Total",
+        "IPD from General M", "IPD from General F", "IPD from General Tr", "IPD from General Total",
+        "IPD from Emergency M", "IPD from Emergency F", "IPD from Emergency Tr", "IPD from Emergency Total",
+        "Overall M", "Overall F", "Overall Tr", "Overall Total",
+        "Deaths M", "Deaths F", "Deaths Tr", "Deaths Total", "Remarks",
+    ])
+    for v in rows:
+        writer.writerow(
+            [v['sr_no'], v['disease_name'], v['code']] +
+            [
+                v["general_opd_m"], v["general_opd_f"], v["general_opd_tr"], v["general_opd_total"],
+                v["emergency_opd_m"], v["emergency_opd_f"], v["emergency_opd_tr"], v["emergency_opd_total"],
+                v["ipd_general_m"], v["ipd_general_f"], v["ipd_general_tr"], v["ipd_general_total"],
+                v["ipd_emergency_m"], v["ipd_emergency_f"], v["ipd_emergency_tr"], v["ipd_emergency_total"],
+                v["overall_m"], v["overall_f"], v["overall_tr"], v["overall_total"],
+                v["general_deaths_m"], v["general_deaths_f"], v["general_deaths_tr"], v["general_deaths_total"],
+                v["remarks"],
+            ]
+        )
+    writer.writerow(
+        ["", "TOTAL", ""] +
+        [
+            totals["general_opd_m"], totals["general_opd_f"], totals["general_opd_tr"], totals["general_opd_total"],
+            totals["emergency_opd_m"], totals["emergency_opd_f"], totals["emergency_opd_tr"], totals["emergency_opd_total"],
+            totals["ipd_general_m"], totals["ipd_general_f"], totals["ipd_general_tr"], totals["ipd_general_total"],
+            totals["ipd_emergency_m"], totals["ipd_emergency_f"], totals["ipd_emergency_tr"], totals["ipd_emergency_total"],
+            totals["overall_m"], totals["overall_f"], totals["overall_tr"], totals["overall_total"],
+            totals["general_deaths_m"], totals["general_deaths_f"], totals["general_deaths_tr"], totals["general_deaths_total"],
+            "",
+        ]
+    )
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = f"attachment; filename={report.health_establishment_name}_{report.month}_{report.year}_cbhi_form1.csv".replace(" ", "_")
+    return response
+
+
 @app.route("/admin/cbhi-reports")
 @admin_required
 def admin_cbhi_reports():
@@ -1995,6 +2050,59 @@ def admin_ncd_report_delete(report_id):
     db.session.commit()
     flash("CBHI Form-2 report deleted.", "info")
     return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/ncd-report/<int:report_id>/export/csv")
+@admin_required
+def admin_ncd_report_csv(report_id):
+    report = NcdReport.query.get_or_404(report_id)
+    rows, totals = ncd_rows(report)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["CENTRAL BUREAU OF HEALTH INTELLIGENCE (CBHI)", "ANNEXURE-C", "FORM-2"])
+    writer.writerow(["MONTHLY REPORT ON INSTITUTIONAL CASES AND DEATHS IN THE REPORTING UNIT DUE TO NON-COMMUNICABLE DISEASES"])
+    writer.writerow([f"Month: {report.month}", f"Year: {report.year}"])
+    writer.writerow([f"Name of Health Establishment: {report.health_establishment_name}"])
+    writer.writerow([f"Address / Phone: {report.postal_address_phone}"])
+    writer.writerow([
+        "Sr. No.", "Disease Name", "ICD Code",
+        "General OPD M", "General OPD F", "General OPD Tr", "General OPD Total",
+        "Emergency OPD M", "Emergency OPD F", "Emergency OPD Tr", "Emergency OPD Total",
+        "IPD from General M", "IPD from General F", "IPD from General Tr", "IPD from General Total",
+        "IPD from Emergency M", "IPD from Emergency F", "IPD from Emergency Tr", "IPD from Emergency Total",
+        "Overall M", "Overall F", "Overall Tr", "Overall Total",
+        "Deaths M", "Deaths F", "Deaths Tr", "Deaths Total", "Remarks",
+    ])
+    for v in rows:
+        writer.writerow(
+            [v['sr_no'], v['disease_name'], v['code']] +
+            [
+                v["general_opd_m"], v["general_opd_f"], v["general_opd_tr"], v["general_opd_total"],
+                v["emergency_opd_m"], v["emergency_opd_f"], v["emergency_opd_tr"], v["emergency_opd_total"],
+                v["ipd_general_m"], v["ipd_general_f"], v["ipd_general_tr"], v["ipd_general_total"],
+                v["ipd_emergency_m"], v["ipd_emergency_f"], v["ipd_emergency_tr"], v["ipd_emergency_total"],
+                v["overall_m"], v["overall_f"], v["overall_tr"], v["overall_total"],
+                v["general_deaths_m"], v["general_deaths_f"], v["general_deaths_tr"], v["general_deaths_total"],
+                v["remarks"],
+            ]
+        )
+    writer.writerow(
+        ["", "TOTAL", ""] +
+        [
+            totals["general_opd_m"], totals["general_opd_f"], totals["general_opd_tr"], totals["general_opd_total"],
+            totals["emergency_opd_m"], totals["emergency_opd_f"], totals["emergency_opd_tr"], totals["emergency_opd_total"],
+            totals["ipd_general_m"], totals["ipd_general_f"], totals["ipd_general_tr"], totals["ipd_general_total"],
+            totals["ipd_emergency_m"], totals["ipd_emergency_f"], totals["ipd_emergency_tr"], totals["ipd_emergency_total"],
+            totals["overall_m"], totals["overall_f"], totals["overall_tr"], totals["overall_total"],
+            totals["general_deaths_m"], totals["general_deaths_f"], totals["general_deaths_tr"], totals["general_deaths_total"],
+            "",
+        ]
+    )
+    response = make_response(output.getvalue())
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+    response.headers["Content-Disposition"] = f"attachment; filename={report.health_establishment_name}_{report.month}_{report.year}_cbhi_form2.csv".replace(" ", "_")
+    return response
 
 
 @app.route("/admin/ncd-reports")
